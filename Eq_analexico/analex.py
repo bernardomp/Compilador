@@ -23,10 +23,11 @@ class Analex:
  #  Devuelve: --
  #
  ############################################################################
- def __init__(self):
+ def __init__(self,flujo):
     #Debe completarse con  los campos de la clase que se consideren necesarios
 
     self.nlinea=1 #contador de lineas para identificar errores
+    self.flujo = flujo
 
  ############################################################################
  #
@@ -38,21 +39,44 @@ class Analex:
  ############################################################################
  def Analiza(self):
   
-  ch=leerCaracter
+  ch=self.flujo.siguiente()
   if ch==" ":
        # quitar todos los caracteres blancos 
        #buscar el siguiente componente lexico que sera devuelto )
-  elif ch== "+":
-   # debe crearse un objeto de la clasee OpAdd que sera devuelto
-  elif  #asi con todos los simbolos y operadores del lenguaje
+       return self.Analiza()
+  elif ch== "+" or ch== "-":
+   # debe crearse un objeto de la clase OpAdd que sera devuelto
+   return componentes.OpAdd(ch)
+  
+  elif ch== "*" or ch== "/":
+   # debe crearse un objeto de la clase OpAdd que sera devuelto
+   return componentes.OpMult(ch)
+
+   elif ch== "[" #asi con todos los simbolos y operadores del lenguaje
+   return componentes.CorAp()
+
+  elif ch== "]" #asi con todos los simbolos y operadores del lenguaje
    return componentes.CorCi()
+
   elif ch == "{":
-   #Saltar todos los caracteres del comentario 
+
+    #Saltar todos los caracteres del comentario 
+    while(ch != "}"):
+      ch=self.flujo.siguiente()
+  
    # y encontrar el siguiente componente lexico
+    return self.Analiza()
+
   elif ch == "}":
    print "ERROR: Comentario no abierto" # tenemos un comentario no abierto
    return self.Analiza()
   elif ch==":":
+     ch=self.flujo.siguiente()
+
+    if ch  == '=':
+      return  OpAsigna()
+    else:
+      return 
     #Comprobar con el siguiente caracter si es una definicion de la declaracion o el operador de asignacion
   elif  
     #Completar los operadores y categorias lexicas que faltan
@@ -66,6 +90,7 @@ class Analex:
     # Devolver un objeto de la categoria correspondiente 
   elif ch== "\n":
    #incrementa el numero de linea ya que acabamos de saltar a otra
+    self.nlinea+=1
    # devolver el siguiente componente encontrado
 
 
