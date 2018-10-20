@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-
+# coding=utf-8
 import componentes
 #import errores
 import flujo
 import string
 import sys
+from sets import ImmutableSet
 
 from sys import argv
 
@@ -12,7 +13,7 @@ class Analex:
 #############################################################################
 ##  Conjunto de palabras reservadas para comprobar si un identificador es PR
 #############################################################################
-  PR = frozenset(["PROGRAMA", "VAR", "VECTOR","DE", "ENTERO", "REAL", "BOOLEANO", "PROC", "FUNCION", "INICIO", "FIN", "SI", "ENTONCES", "SINO", "MIENTRAS", "HACER", "LEE", "ESCRIBE", "Y", "O", "NO", "CIERTO","FALSO"])
+  PR = ImmutableSet(["PROGRAMA", "VAR", "VECTOR","DE", "ENTERO", "REAL", "BOOLEANO", "PROC", "FUNCION", "INICIO", "FIN", "SI", "ENTONCES", "SINO", "MIENTRAS", "HACER", "LEE", "ESCRIBE", "Y", "O", "NO", "CIERTO","FALSO"])
 
  ############################################################################
  #
@@ -41,25 +42,26 @@ class Analex:
   def Analiza(self):
   
     ch=self.flujo.siguiente()
+
     print(ch)
-    if ch==" ":
+    if ch == " ":
        # quitar todos los caracteres blancos 
        #buscar el siguiente componente lexico que sera devuelto )
-       return self.Analiza()
+      return self.Analiza()
 
     elif ch== "+" or ch== "-":
    # debe crearse un objeto de la clase OpAdd que sera devuelto
-      return Componente.OpAdd(ch)
+      return componentes.OpAdd(ch)
   
     elif ch== "*" or ch== "/":
     # debe crearse un objeto de la clase OpAdd que sera devuelto
-      return Componente.OpMult(ch)
+      return componentes.OpMult(ch)
 
     elif ch== "[": #asi con todos los simbolos y operadores del lenguaje
-      return Componente.CorAp()
+      return componentes.CorAp()
 
     elif ch== "]": #asi con todos los simbolos y operadores del lenguaje
-      return Componente.CorCi()
+      return componentes.CorCi()
 
     elif ch == "{":
 
@@ -71,17 +73,16 @@ class Analex:
       return self.Analiza()
 
     elif ch == "}":
-      print ("ERROR: Comentario no abierto") # tenemos un comentario no abierto
+      print "ERROR: Comentario no abierto" # tenemos un comentario no abierto
       return self.Analiza()
 
     elif ch==":":
       ch=self.flujo.siguiente()
 
       if ch  == '=':
-        return Componente.OpAsigna()
+        return componentes.OpAsigna()
       
       else:
-        print(ch)
         self.flujo.devuelve(ch)
         return self.Analiza()
 
@@ -117,19 +118,19 @@ class Analex:
         ch = self.flujo.siguiente()
 
     #devolver el ultimo caracter a la entrada
-      print("sdsd")
+  
       self.flujo.devuelve(ch)
-      print("sdsd")
+
 
     # Comprobar si es un identificador o PR y devolver el objeto correspondiente
 
-      if(cadena in PR):
+      if(cadena in Analex.PR):
         return componentes.PR(cadena,self.nlinea)
       else:
-        return componentes.identif(cadena,self.nlinea)
+        return componentes.Identif(cadena,self.nlinea)
 
 
-    elif self.esNumero:
+    elif self.esNumero(ch):
     #Leer todos los elementos que forman el numero 
       numero = "" + ch
       puntoDetectado = False
@@ -155,7 +156,8 @@ class Analex:
         return componentes.Numero(numero,"ENTERO")
 
 
-    elif ch== "\n":
+    elif ch == "\n":
+      print("DF")
    #incrementa el numero de linea ya que acabamos de saltar a otra
       self.nlinea+=1
    # devolver el siguiente componente encontrado
@@ -174,7 +176,7 @@ class Analex:
 if __name__=="__main__":
   script, filename=argv
   txt=open(filename)
-  print ("Este es tu fichero %r" % filename)
+  print "Este es tu fichero %r" % filename
   i=0
   fl = flujo.Flujo(txt)
   analex=Analex(fl)
@@ -182,15 +184,13 @@ if __name__=="__main__":
   try:
     c=analex.Analiza()
     while c :
-      print (c)
+      print c
       c=analex.Analiza()
+      print c
     i=i+1
-  
-  except BaseException as e:
-    print(e)
 
-  """
-  except errores.Error, err:
-    sys.stderr.write("%s\n" % err)
+  except BaseException as e:
+    sys.stderr.write("%s\n" % e)
+    """
     analex.muestraError(sys.stderr)
-  """
+    """

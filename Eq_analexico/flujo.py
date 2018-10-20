@@ -43,15 +43,15 @@ if __name__=="__main__":
   linea= sys.stdin.readline()
   while linea and linea!= "\n":
     f= Flujo(linea)
-    print ("Voy a señalar los espacios:")
+    print "Voy a señalar los espacios:"
     c= f.siguiente()
     while c!= "":
       if c==" ":
-        print (f.cadena().rstrip())
-        print (" " * f.posleida()+"^")
+        print f.cadena().rstrip()
+        print " " * f.posleida()+"^"
         c= f.siguiente()
       c= f.siguiente()
-    print ("Ahora voy a probar a devolver caracteres al flujo de entrada:")
+    print "Ahora voy a probar a devolver caracteres al flujo de entrada:"
     f.devuelve(linea)
     l= ""
     for i in range(len(linea)):
@@ -63,9 +63,9 @@ if __name__=="__main__":
       c= f.siguiente()
       l+= c
     if linea != l:
-      print ("Error:")
-      print ("  leído:", linea)
-      print ("  reconstruido:", l)
+      print "Error:"
+      print "  leído:", linea
+      print "  reconstruido:", l
     else:
-      print ("BIEN")
+      print "BIEN"
     linea= sys.stdin.readline()
