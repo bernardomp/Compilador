@@ -15,8 +15,8 @@ class Componente:
   def __init__(self):
     self.cat= str(self.__class__.__name__)
 
- #este metodo mostrará por pantalla un componente lexico
- def __str__(self):
+#este metodo mostrará por pantalla un componente lexico
+  def __str__(self):
     s=[]
     for k,v in self.__dict__.items():
       if k!= "cat": s.append("%s: %s" % (k,v))
@@ -65,20 +65,25 @@ class DosPtos(Componente):
 # Clase que define la categoria OpAdd 
 class OpAdd(Componente):
     def __init__(self,op):
+      Componente.__init__(self)
       self.op = op
 #debe almacenarse de que operador se trata
 
 # Clase que define la categoria OpMult
 class OpMult(Componente):
   def __init__(self,op):
-      self.op = op
+    Componente.__init__(self)
+    self.op = op
 #Debe alnmacenarse que operador es
 
 #clase para representar los numeros.
 #Puede dividirse en 2 para representar los enteros y los reales de forma independiente
 #Si se opta por una sola categoria debe alamcenarse el tipo de los datos ademas del valor
 class Numero (Componente):
-  pass
+  def __init__(self,valor,tipo):
+    Componente.__init__(self)
+    self.valor= valor
+    self.tipo=tipo
   
 #clase para representar los identificadores.
 class Identif (Componente):
@@ -98,6 +103,9 @@ class PR(Componente):
 # Clase que define la categoria OpRel
 #Debe alnmacenarse que operador es concretamente
 
-class OpRel (Componente): 
+class OpRel (Componente):
+  def __init__(self,op):
+    Componente.__init__(self)
+    self.op = op
 
 
