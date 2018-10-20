@@ -70,15 +70,30 @@ class Analex:
   elif ch == "}":
    print "ERROR: Comentario no abierto" # tenemos un comentario no abierto
    return self.Analiza()
+
   elif ch==":":
      ch=self.flujo.siguiente()
 
     if ch  == '=':
-      return  OpAsigna()
+      return  componentes.OpAsigna()
     else:
       return 
     #Comprobar con el siguiente caracter si es una definicion de la declaracion o el operador de asignacion
-  elif  
+
+  elif  ch == '(':
+    return ParentCi():
+
+  elif  ch == ')':
+    return
+  
+  elif  ch == '.':
+    return
+  
+  elif  ch == ';':
+    return
+
+   elif  ch == ':':
+    return  
     #Completar los operadores y categorias lexicas que faltan
   elif ch es un caracter
     #leer entrada hasta que no sea un caracter valido de un identificador
