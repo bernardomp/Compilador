@@ -43,7 +43,7 @@ if __name__=="__main__":
   linea= sys.stdin.readline()
   while linea and linea!= "\n":
     f= Flujo(linea)
-    print "Voy a seÃ±alar los espacios:"
+    print "Voy a señalar los espacios:"
     c= f.siguiente()
     while c!= "":
       if c==" ":
@@ -64,7 +64,7 @@ if __name__=="__main__":
       l+= c
     if linea != l:
       print "Error:"
-      print "  leÃ­do:", linea
+      print "  leído:", linea
       print "  reconstruido:", l
     else:
       print "BIEN"
