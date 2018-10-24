@@ -15,8 +15,8 @@ class Componente:
   def __init__(self):
     self.cat= str(self.__class__.__name__)
 
- #este metodo mostrará por pantalla un componente lexico
- def __str__(self):
+ #este metodo mostrara por pantalla un componente lexico
+  def __str__(self):
     s=[]
     for k,v in self.__dict__.items():
       if k!= "cat": s.append("%s: %s" % (k,v))

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import componentes
-import errores
+#import errores
 import flujo
 import string
 import sys
@@ -23,13 +23,13 @@ class Analex:
  #  Devuelve: --
  #
  ############################################################################
- def __init__(self):
+ def __init__(self,flujo):
     #Debe completarse con  los campos de la clase que se consideren necesarios
 
     self.nlinea=1 #contador de lineas para identificar errores
     self.flujo = flujo
-    self.esCaracter = lambda ch: (ord(ch) >= 65 and ord(ch) <= 90) or (ord(ch) >= 97 and ord(ch) <= 122)
-    self.esNumero = lambda ch: ord(ch) >= 48 and ord(ch) <= 57
+    self.esCaracter = lambda ch: ch and((ord(ch) >= 65 and ord(ch) <= 90) or (ord(ch) >= 97 and ord(ch) <= 122))
+    self.esNumero = lambda ch: ch and (ord(ch) >= 48 and ord(ch) <= 57)
  ############################################################################
  #
  #  Funcion: Analiza
@@ -40,19 +40,20 @@ class Analex:
  ############################################################################
  def Analiza(self):
   
-  ch=leerCaracter
+  ch=self.flujo.siguiente()
+
   if ch==" ":
        # quitar todos los caracteres blancos 
        return self.Analiza()
        #buscar el siguiente componente lexico que sera devuelto )
   elif ch == "+" or ch == "-":
    # debe crearse un objeto de la clasee OpAdd que sera devuelto
-      return Componente.OpAdd(ch)
+      return componentes.OpAdd(ch)
   elif ch== "*" or ch== "/":
-      return Componente.OpMult(ch)
+      return componentes.OpMult(ch)
 
   elif ch == "[": 
-      return Componente.CorAp()
+      return componentes.CorAp()
   elif ch== "]":   #asi con todos los simbolos y operadores del lenguaje
    return componentes.CorCi()
   elif ch == "{":
@@ -60,20 +61,21 @@ class Analex:
     while(ch != "}"):
         ch=self.flujo.siguiente()
    # y encontrar el siguiente componente lexico
-   return self.Analiza()
+    return self.Analiza()
   elif ch == "}":
    print "ERROR: Comentario no abierto" # tenemos un comentario no abierto
    return self.Analiza()
   elif ch==":":
     #Comprobar con el siguiente caracter si es una definicion de la declaracion o el operador de asignacion
-     ch=self.flujo.siguiente()
+    ch=self.flujo.siguiente()
 
-     if ch  == '=':
-        return Componente.OpAsigna()
+    if ch  == '=':
+      return componentes.OpAsigna()
       
-      else:
-        self.flujo.devuelve(ch)
-        return self.Analiza()
+    else:
+      self.flujo.devuelve(ch)
+      return self.Analiza()
+  
   elif  ch == '(':
     return componentes.ParentAp()
 
@@ -105,10 +107,10 @@ class Analex:
     #devolver el ultimo caracter a la entrada
     self.flujo.devuelve(ch)
     # Comprobar si es un identificador o PR y devolver el objeto correspondiente
-    if(cadena in PR):
+    if(cadena in Analex.PR):
       return componentes.PR(cadena,self.nlinea)
     else:
-      return componentes.identif(cadena,self.nlinea)
+      return componentes.Identif(cadena,self.nlinea)
   elif self.esNumero(ch):
     #Leer todos los elementos que forman el numero 
     numero = "" + ch
@@ -138,6 +140,9 @@ class Analex:
     self.nlinea+=1
    # devolver el siguiente componente encontrado
     return self.Analiza()
+  
+  else:
+    return self.Analiza()
 
 
 ############################################################################
@@ -161,7 +166,13 @@ if __name__=="__main__":
        print c
        c=analex.Analiza()
       i=i+1
-    except errores.Error, err:
-     sys.stderr.write("%s\n" % err)
-     analex.muestraError(sys.stderr)
+    
+    #except errores.Error, err:
+     #sys.stderr.write("%s\n" % err)
+     #analex.muestraError(sys.stderr)
+    except Exception as e: 
+      print(e)
+    
+
+
 
