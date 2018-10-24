@@ -64,26 +64,29 @@ class DosPtos(Componente):
 
 # Clase que define la categoria OpAdd 
 class OpAdd(Componente):
-   def __init__(self,op):
+   def __init__(self,op,linea):
       Componente.__init__(self)
-      self.op = op
+      self.valor = op
+      self.linea=linea
 #debe almacenarse de que operador se trata
 
 # Clase que define la categoria OpMult
 class OpMult(Componente):
-  def __init__(self,op):
+  def __init__(self,op,linea):
     Componente.__init__(self)
-    self.op = op
+    self.valor = op
+    self.linea=linea
 #Debe alnmacenarse que operador es
 
 #clase para representar los numeros.
 #Puede dividirse en 2 para representar los enteros y los reales de forma independiente
 #Si se opta por una sola categoria debe alamcenarse el tipo de los datos ademas del valor
 class Numero (Componente):
-   def __init__(self,valor,tipo):
+   def __init__(self,valor,linea,tipo):
     Componente.__init__(self)
     self.valor= valor
     self.tipo=tipo
+    self.linea=linea
   
 #clase para representar los identificadores.
 class Identif (Componente):
@@ -104,8 +107,9 @@ class PR(Componente):
 #Debe alnmacenarse que operador es concretamente
 
 class OpRel (Componente):
-  def __init__(self,op):
+  def __init__(self,op,linea):
     Componente.__init__(self)
-    self.op = op
+    self.valor = op
+    self.linea=linea
 
 

@@ -28,8 +28,6 @@ class Analex:
 
     self.nlinea=1 #contador de lineas para identificar errores
     self.flujo = flujo
-    self.esCaracter = lambda ch: ch and((ord(ch) >= 65 and ord(ch) <= 90) or (ord(ch) >= 97 and ord(ch) <= 122))
-    self.esNumero = lambda ch: ch and (ord(ch) >= 48 and ord(ch) <= 57)
  ############################################################################
  #
  #  Funcion: Analiza
@@ -42,29 +40,45 @@ class Analex:
   
   ch=self.flujo.siguiente()
 
-  if ch==" ":
+  if ch == " ":
        # quitar todos los caracteres blancos 
        return self.Analiza()
        #buscar el siguiente componente lexico que sera devuelto )
-  elif ch == "+" or ch == "-":
+  elif ch == "+":
+      return componentes.OpAdd("SimSum",self.nlinea)
+
+  elif ch == "-":
+      return componentes.OpAdd("SimRest",self.nlinea)
    # debe crearse un objeto de la clasee OpAdd que sera devuelto
-      return componentes.OpAdd(ch)
-  elif ch== "*" or ch== "/":
-      return componentes.OpMult(ch)
+     
+  elif ch == "*": 
+    return componentes.OpMult("SimMult",self.nlinea)
+
+  elif ch == "/":
+    return componentes.OpMult("SimDiv",self.nlinea)
 
   elif ch == "[": 
       return componentes.CorAp()
+
   elif ch== "]":   #asi con todos los simbolos y operadores del lenguaje
    return componentes.CorCi()
+
   elif ch == "{":
    #Saltar todos los caracteres del comentario 
     while(ch != "}"):
         ch=self.flujo.siguiente()
+    
+    #Comprobamos que hemos cerrado el comentario
+    if ch != "}":
+      print "ERROR: Comentario no cerrado" # tenemos un comentario no cerrado
+      
    # y encontrar el siguiente componente lexico
     return self.Analiza()
+
   elif ch == "}":
    print "ERROR: Comentario no abierto" # tenemos un comentario no abierto
    return self.Analiza()
+   
   elif ch==":":
     #Comprobar con el siguiente caracter si es una definicion de la declaracion o el operador de asignacion
     ch=self.flujo.siguiente()
@@ -74,7 +88,7 @@ class Analex:
       
     else:
       self.flujo.devuelve(ch)
-      return self.Analiza()
+      return componentes.DosPtos()
   
   elif  ch == '(':
     return componentes.ParentAp()
@@ -92,54 +106,82 @@ class Analex:
     return componentes.PtoComa()
 
   elif  ch == ':':
-    return componentes.DosPto()
-    #Completar los operadores y categorias lexicas que faltan
+    return componentes.DosPtos()
+  
+  elif  ch == "=":
+    return componentes.OpRel("SimIgual",self.nlinea)
+  
+  elif  ch == "<":
+    ch = self.flujo.siguiente()
 
-  elif self.esCaracter(ch):
+    if ch == ">":
+      return componentes.OpRel("SimDist",self.nlinea)
+    elif ch == "=":
+      return componentes.OpRel("SimMenIgual",self.nlinea)
+    else:
+      self.flujo.devuelve(ch)
+      return componentes.OpRel("SimMenor",self.nlinea)
+  
+  elif  ch == ">":
+    ch = self.flujo.siguiente()
+    if ch == "=":
+      return componentes.OpRel("SimMayIgual",self.nlinea)
+    else:
+      self.flujo.devuelve(ch)
+      return componentes.OpRel("SimMayor",self.nlinea)
+
+  elif ch.isalpha():
     #leer entrada hasta que no sea un caracter valido de un identificador
     cadena = "" + ch
 
     ch = self.flujo.siguiente()
     
-    while(self.esCaracter(ch) or self.esNumero(ch)):
+    while ch.isalnum():
       cadena = cadena + ch
       ch = self.flujo.siguiente()
+
     #devolver el ultimo caracter a la entrada
     self.flujo.devuelve(ch)
+
     # Comprobar si es un identificador o PR y devolver el objeto correspondiente
     if(cadena in Analex.PR):
       return componentes.PR(cadena,self.nlinea)
     else:
       return componentes.Identif(cadena,self.nlinea)
-  elif self.esNumero(ch):
+
+  elif ch.isdigit():
     #Leer todos los elementos que forman el numero 
     numero = "" + ch
-    puntoDetectado = False
+    puntoDetectado = 0
 
     ch = self.flujo.siguiente()
       
-    while(self.esNumero(ch) and puntoDetectado == False):
+    while ch.isdigit() or (puntoDetectado==0 and ch == ".") :
 
       if ch == ".":
-        puntoDetectado = True
+        puntoDetectado+=1
 
-        numero = numero + ch
-        ch = self.flujo.siguiente()
+      numero = numero + ch
+      ch = self.flujo.siguiente()
+
     # devolver el ultimo caracter que ya no pertenece al numero a la entrada
     self.flujo.devuelve(ch)
 
     # Devolver un objeto de la categoria correspondiente
-    if puntoDetectado:
-      return componentes.Numero(numero,"REAL")
+    if puntoDetectado == 1:
+      return componentes.Numero(numero,self.nlinea,float)
       
     else:
-      return componentes.Numero(numero,"ENTERO")
+      return componentes.Numero(numero,self.nlinea,int)
 
   elif ch== "\n":
    #incrementa el numero de linea ya que acabamos de saltar a otra
     self.nlinea+=1
    # devolver el siguiente componente encontrado
     return self.Analiza()
+  
+  elif len(ch) == 0:
+    return 
   
   else:
     return self.Analiza()
