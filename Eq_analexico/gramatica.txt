@@ -1,0 +1,160 @@
+<Programa> -> PROGRAMA id; <decl_var> <instrucciones>.
+
+<decl_var> -> VAR <lista_id> : <tipo> ; <decl_v> 
+<decl_var> -> lambda
+
+<decl_v> -> <lista_id> : <tipo> ; <decl_v>
+<decl_v> -> lambda
+
+<lista_id> -> id <resto_listaid>
+
+<resto_listaid> -> ,<lista_id>
+<resto_listaid> -> lambda
+
+<Tipo> -> <tipo_std>
+<Tipo> -> VECTOR [num] de <tipo_std>
+
+<tipo_std> -> ENTERO
+<tipo_std> -> REAL
+<tipo_std> -> BOOLEANO
+
+<instrucciones> -> INICIO <lista_inst> FIN
+
+<lista_inst> -> <instruccion>;<lista_inst>
+<lista_inst> -> lambda
+
+<instruccion> -> INICIO <lista_inst> FIN 
+<instruccion> -> <inst_simple>
+<instruccion> -> <inst_e/s>
+<instruccion> -> SI <expresion> ENTONCES <instruccion> SINO <instruccion>
+<instruccion> -> MIENTRAS <expresion> HACER <instruccion>
+
+<inst_simple> -> id <resto_instsimple>
+
+<resto_instsimple> -> opasigna <expresion> 
+<resto_instsimple> -> [<expr_simple>] opasigna <expresion>
+<resto_instsimple> -> lambda
+
+<variable> -> id <resto_var>
+
+<resto_var> -> [<expr_simple>]
+<resto_var> -> lambda
+
+<inst_e/s> -> LEE (id) 
+<inst_e/s> -> ESCRIBE (<expr_simple>)
+
+<expresion> -> <expr_simple> oprel <expr_simple>
+<expresion> -> <expr_simple>
+
+<expr_simple> -> <termino> <resto_exsimple> 
+<expr_simple> -> <signo> <termino> <resto_exsimple>
+
+<resto_exsimple> -> opsuma <termino> <resto_exsimple>
+<resto_exsimple> -> O <termino> <resto_exsimple>
+<resto_exsimple> -> lambda
+
+<termino> -> <factor> <resto_term>
+
+<resto_term> -> opmult <factor> <resto_term>
+<resto_term> -> Y <factor> <resto_term>
+<resto_term> -> lambda
+
+<factor> -> <variable>
+<factor> -> num
+<factor> -> (<expresion>)
+<factor> -> NO <factor>
+<factor> -> CIERTO
+<factor> -> FALSO
+
+<signo> -> + 
+<signo> -> -
+
+#############################################################
+
+No hay recursividad izquierda
+
+#############################################################
+
+Necesitamos eliminar refijos comunes
+
+<expresion> -> <expr_simple> <expresion'>
+
+<expresion'> -> oprel <expr_simple>
+<expresion'> -> lambda
+
+############################################3
+
+Reglas finales
+
+<Programa> -> PROGRAMA id; <decl_var> <instrucciones>.
+
+<decl_var> -> VAR <lista_id> : <tipo> ; <decl_v> 
+<decl_var> -> lambda
+
+<decl_v> -> <lista_id> : <tipo> ; <decl_v>
+<decl_v> -> lambda
+
+<lista_id> -> id <resto_listaid>
+
+<resto_listaid> -> ,<lista_id>
+<resto_listaid> -> lambda
+
+<Tipo> -> <tipo_std>
+<Tipo> -> VECTOR [num] de <tipo_std>
+
+<tipo_std> -> ENTERO
+<tipo_std> -> REAL
+<tipo_std> -> BOOLEANO
+
+<instrucciones> -> INICIO <lista_inst> FIN
+
+<lista_inst> -> <instruccion>;<lista_inst>
+<lista_inst> -> lambda
+
+<instruccion> -> INICIO <lista_inst> FIN 
+<instruccion> -> <inst_simple>
+<instruccion> -> <inst_e/s>
+<instruccion> -> SI <expresion> ENTONCES <instruccion> SINO <instruccion>
+<instruccion> -> MIENTRAS <expresion> HACER <instruccion>
+
+<inst_simple> -> id <resto_instsimple>
+
+<resto_instsimple> -> opasigna <expresion> 
+<resto_instsimple> -> [<expr_simple>] opasigna <expresion>
+<resto_instsimple> -> lambda
+
+<variable> -> id <resto_var>
+
+<resto_var> -> [<expr_simple>]
+<resto_var> -> lambda
+
+<inst_e/s> -> LEE (id) 
+<inst_e/s> -> ESCRIBE (<expr_simple>)
+
+<expresion> -> <expr_simple> <expresion'>
+
+<expresion'> -> oprel <expr_simple>
+<expresion'> -> lambda
+
+<expr_simple> -> <termino> <resto_exsimple> 
+<expr_simple> -> <signo> <termino> <resto_exsimple>
+
+<resto_exsimple> -> opsuma <termino> <resto_exsimple>
+<resto_exsimple> -> O <termino> <resto_exsimple>
+<resto_exsimple> -> lambda
+
+<termino> -> <factor> <resto_term>
+
+<resto_term> -> opmult <factor> <resto_term>
+<resto_term> -> Y <factor> <resto_term>
+<resto_term> -> lambda
+
+<factor> -> <variable>
+<factor> -> num
+<factor> -> (<expresion>)
+<factor> -> NO <factor>
+<factor> -> CIERTO
+<factor> -> FALSO
+
+<signo> -> + 
+<signo> -> -
