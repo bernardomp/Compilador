@@ -204,10 +204,13 @@ class Analex:
             return self.Analiza()
 
         elif len(ch) == 0:
-            return
+            return 
 
         else:
             return self.Analiza()
+
+    def siguiente(self):
+        return self.Analiza()
 
 
 ############################################################################
