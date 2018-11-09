@@ -30,6 +30,7 @@ class Analex:
 
         self.nlinea = 1  # contador de lineas para identificar errores
         self.flujo = flujo
+        self.eof = False
     ############################################################################
     #
     #  Funcion: Analiza
@@ -203,11 +204,15 @@ class Analex:
             # devolver el siguiente componente encontrado
             return self.Analiza()
 
-        elif len(ch) == 0:
-            return 
-
-        else:
+        elif ch != "":
             return self.Analiza()
+        
+        else:
+            if self.eof:
+                return
+            else:
+                self.eof = True
+                return componentes.EOF()
 
     def siguiente(self):
         return self.Analiza()

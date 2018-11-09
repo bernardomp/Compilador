@@ -112,7 +112,7 @@ class OpRel (Componente):
     self.valor = op
     self.linea=linea
 
-class FinFichero(Componente):
+class EOF(Componente):
   pass
 
 
