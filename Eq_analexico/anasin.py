@@ -64,7 +64,6 @@ class Anasint:
             self.comprueba("DosPtos")
             self.analizaTipo()
             self.comprueba("PtoComa")
-            print self.componente
             self.analizaDeclV()
         
         elif self.componente == "PR" and self.componente.valor == "INICIO":
@@ -103,7 +102,6 @@ class Anasint:
         if self.componente.cat == "PR" and self.componente.valor in ["ENTERO","REAL","BOOLEAN"]:
             #<Tipo> -> <tipo_std>
             self.analizaTipostd()
-            self.avanza()
         
         elif self.componente.cat == "PR" and self.componente.valor == "VECTOR":
             #<Tipo> -> VECTOR [num] de <tipo_std>
@@ -156,15 +154,15 @@ class Anasint:
 
         if self.componente.cat == "PR" and self.componente.valor == "ENTERO":
             #<tipo_std> -> ENTERO
-            pass
+            self.avanza()
 
         elif self.componente.cat == "PR" and self.componente.valor == "REAL":
             #<tipo_std> -> REAL
-            pass
+            self.avanza()
 
         elif self.componente.cat == "PR" and self.componente.valor == "BOOLEANO":
             #<tipo_std> -> BOOLEANO
-            pass
+            self.avanza()
 
         else:
             self.error()
@@ -202,7 +200,7 @@ class Anasint:
             #<instruccion> -> <inst_e/s>
             self.analizaInstruccionES()
 
-        elif self.componente.cat == "PR" and self.categoria.valor == "SI":
+        elif self.componente.cat == "PR" and self.componente.valor == "SI":
             #<instruccion> -> SI <expresion> ENTONCES <instruccion> SINO <instruccion>
             self.avanza()
             self.analizaExpresion()
@@ -214,6 +212,7 @@ class Anasint:
         elif self.componente.cat == "PR" and self.componente.valor == "MIENTRAS":
             #<instruccion> -> MIENTRAS <expresion> HACER <instruccion>
             self.avanza()
+            print "dsds",self.componente
             self.analizaExpresion()
             self.compruebaPR("HACER")
             self.analizaInstruccion()
@@ -246,6 +245,7 @@ class Anasint:
             #<inst_e/s> -> ESCRIBE (<expr_simple>)
             self.avanza()
             self.comprueba("ParentAp")
+            print "Estoy aqui",self.componente
             self.analizaExpresionSimple()
             self.comprueba("ParentCi")
         
@@ -254,10 +254,12 @@ class Anasint:
     
 
     def analizaExpresion(self):
-
-        if (self.componente.cat == "PR" and self.componente.valor in ["FALSO", "CIERTO", "NO"]) or  self.componente.cat in ["OpAdd","ParentAp","Numero","ParentAp","Identif"]:
+        
+        if (self.componente.cat == "PR" and self.componente.valor in ["FALSO", "CIERTO", "NO"]) or  self.componente.cat in ["OpAdd","Numero","ParentAp","Identif"]:
             #<expresion> -> <expr_simple> <expresion'>
+            print "12",self.componente
             self.analizaExpresionSimple()
+            print "32",self.componente
             self.analizaExpresionPrima()
         else:
             self.error()
@@ -265,17 +267,18 @@ class Anasint:
 
     def analizaRestoInstSimple(self):
 
-        if self.componente.cat == "OpAdd":
-            #<resto_exsimple> -> opsuma <termino> <resto_exsimple>
+        if self.componente.cat == "OpAsigna":
+            #<resto_instsimple> -> opasigna <expresion> 
             self.avanza()
-            self.analizaTermino()
-            self.analizaRestoExpSimple()
+            self.analizaExpresion()
 
-        elif self.componente.cat == "PR" and self.componente.valor == "O":
-            #<resto_exsimple> -> O <termino> <resto_exsimple>
+        elif self.componente.cat == "CorAp":
+            #<resto_instsimple> -> [<expr_simple>] opasigna <expresion>
             self.avanza()
-            self.analizaTermino()
-            self.analizaRestoExpSimple()
+            self.analizaExpresionSimple()
+            self.comprueba("]")
+            self.comprueba("OpAsigna")
+            self.analizaExpresion()
         
         elif (self.componente.cat == "PR" and self.componente.valor == "SINO") or self.componente.cat == "PtoComa":
             #<resto_exsimple> -> lambda
@@ -296,6 +299,7 @@ class Anasint:
         elif (self.componente.cat == "PR" and self.componente.valor in ["FALSO", "CIERTO", "NO"]) or self.componente.cat in ["Numero", "ParentAp", "Identif"]:
            #<expr_simple> -> <termino> <resto_exsimple> 
             self.analizaTermino()
+            print "Entramos expr_simpl",self.componente
             self.analizaRestoExpSimple()
     
         else:
@@ -321,7 +325,8 @@ class Anasint:
             self.analizaExpresionSimple()
             self.comprueba("CorCi")
         
-        elif (self.componente.cat == "PR" and self.componente.valor == "Y") or self.componente.cat == "OpMult":
+        elif (self.componente.cat == "PR" and self.componente.valor in ["Y","O","ENTONCES","HACER","SINO"]) or self.componente.cat in ["OpMult","OpAdd","OpRel","CorCi","ParentAp", "PtoComa"]:
+            #<resto_var> -> lambda
             pass
         
         else:
@@ -367,6 +372,7 @@ class Anasint:
             self.analizaRestoExpSimple()
 
         elif self.componente.cat in ["CorCi","ParentCi","OpRel", "PtoComa"] or (self.componente.cat == "PR" and self.componente.valor in ["ENTONCES", "HACER", "SINO"]):
+            #<resto_exsimple> -> lambda
             pass
 
         else:
@@ -378,7 +384,7 @@ class Anasint:
         if self.componente.cat == "OpAdd":
             #<signo> -> + 
             #<signo> -> -
-            pass
+            self.avanza()
         
         else:
             self.error()
@@ -398,8 +404,9 @@ class Anasint:
             self.analizaFactor()
             self.analizaRestoTerm()
 
-        elif self.componente.cat == "OpAdd" or (self.componente.cat == "PR" and self.componente.valor == "O"):
+        elif self.componente.cat in [ "OpAdd", "OpRel","CorCi","ParentCi","PtoComa"] or (self.componente.cat == "PR" and self.componente.valor in ["O", "ENTONCES","HACER","SINO"]):
             #<resto_term> -> lambda
+            print "Entrando resto_term",self.componente
             pass
 
         else:
@@ -410,11 +417,11 @@ class Anasint:
 
         if self.componente.cat == "PR" and self.componente.valor == "FALSO":
             #<factor> -> FALSO
-            pass
+            self.avanza()
         
         elif self.componente.cat == "PR" and self.componente.valor == "CIERTO":
             #<factor> -> CIERTO
-            pass
+            self.avanza()
         
         elif self.componente.cat == "PR" and self.componente.valor == "NO":
             #<factor> -> NO <factor>
@@ -423,12 +430,14 @@ class Anasint:
 
         elif self.componente.cat == "Numero":
             #<factor> -> num
-            pass
+            self.avanza()
+            
 
         elif self.componente.cat == "ParentAp":
             #<factor> -> (<expresion>)
             self.avanza()
             self.analizaExpresion()
+            print "4,",self.componente
             self.comprueba("ParentCi")
 
         elif self.componente.cat == "Identif":
