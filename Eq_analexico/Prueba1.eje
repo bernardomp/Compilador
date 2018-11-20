@@ -7,4 +7,3 @@ INICIO
       x:=i*4;
       ESCRIBE(x);
     FIN;
-FIN.
