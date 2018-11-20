@@ -212,7 +212,6 @@ class Anasint:
         elif self.componente.cat == "PR" and self.componente.valor == "MIENTRAS":
             #<instruccion> -> MIENTRAS <expresion> HACER <instruccion>
             self.avanza()
-            print "dsds",self.componente
             self.analizaExpresion()
             self.compruebaPR("HACER")
             self.analizaInstruccion()
@@ -245,11 +244,8 @@ class Anasint:
             #<inst_e/s> -> ESCRIBE (<expr_simple>)
             self.avanza()
             self.comprueba("ParentAp")
-            print "Estoy aqui1",self.componente
             self.analizaExpresionSimple()
-            print "Estoy aquissss2",self.componente
             self.comprueba("ParentCi")
-            print "Estoy aquissss3",self.componente
         
         else:
             self.error()
@@ -259,9 +255,8 @@ class Anasint:
         
         if (self.componente.cat == "PR" and self.componente.valor in ["FALSO", "CIERTO", "NO"]) or  self.componente.cat in ["OpAdd","Numero","ParentAp","Identif"]:
             #<expresion> -> <expr_simple> <expresion'>
-            print "12",self.componente
+            print self.componente, "AQUI"
             self.analizaExpresionSimple()
-            print "32",self.componente
             self.analizaExpresionPrima()
         else:
             self.error()
@@ -301,8 +296,8 @@ class Anasint:
         elif (self.componente.cat == "PR" and self.componente.valor in ["FALSO", "CIERTO", "NO"]) or self.componente.cat in ["Numero", "ParentAp", "Identif"]:
            #<expr_simple> -> <termino> <resto_exsimple> 
             self.analizaTermino()
-            print "Entramos expr_simpl",self.componente
             self.analizaRestoExpSimple()
+            print self.componente, "AQUI5"
     
         else:
             self.error()
@@ -342,7 +337,8 @@ class Anasint:
             self.avanza()
             self.analizaExpresionSimple()
         
-        elif self.componente.cat == "PtoComa" or (self.componente.cat == "PR" and self.componente.valor == ["ENTONCES", "HACER", "SINO"]):
+        elif self.componente.cat == "PtoComa" or (self.componente.cat == "PR" and self.componente.valor in ["ENTONCES","HACER","SINO"]):
+            #<expresion'> -> lambda
             pass
 
         else:
@@ -354,7 +350,6 @@ class Anasint:
         if (self.componente.cat == "PR" and self.componente.valor in ["FALSO", "CIERTO", "NO"]) or self.componente.cat in ["Numero","ParentAp","Identif"]:
             #<termino> -> <factor> <resto_term>
             self.analizaFactor()
-            print "Derech o Izquierda"
             self.analizaRestoTerm()
         
         else:
@@ -376,6 +371,7 @@ class Anasint:
 
         elif self.componente.cat in ["CorCi","ParentCi","OpRel", "PtoComa"] or (self.componente.cat == "PR" and self.componente.valor in ["ENTONCES", "HACER", "SINO"]):
             #<resto_exsimple> -> lambda
+            print self.componente, "AQUI4"
             pass
 
         else:
@@ -409,7 +405,7 @@ class Anasint:
 
         elif self.componente.cat in [ "OpAdd", "OpRel","CorCi","ParentCi","PtoComa"] or (self.componente.cat == "PR" and self.componente.valor in ["O", "ENTONCES","HACER","SINO"]):
             #<resto_term> -> lambda
-            print "Entrando resto_term",self.componente
+            print self.componente, "AQUI3"
             pass
 
         else:
@@ -417,8 +413,6 @@ class Anasint:
 
     
     def analizaFactor(self):
-
-        print "Factor",self.componente
 
         if self.componente.cat == "PR" and self.componente.valor == "FALSO":
             #<factor> -> FALSO
@@ -436,21 +430,18 @@ class Anasint:
         elif self.componente.cat == "Numero":
             #<factor> -> num
             self.avanza()
+            print self.componente, "AQUI2"
             
 
         elif self.componente.cat == "ParentAp":
             #<factor> -> (<expresion>)
             self.avanza()
             self.analizaExpresion()
-            print "4,",self.componente
             self.comprueba("ParentCi")
 
         elif self.componente.cat == "Identif":
             #<factor> -> <variable>
-            print "AntesVar",self.componente
             self.analizaVariable()
-            print "DesVar",self.componente
-
 
         else:
             self.error()
