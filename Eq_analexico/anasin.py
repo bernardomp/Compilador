@@ -69,7 +69,7 @@ class Anasint:
             self.avanza()
 
             if not self.comprueba("Identif"):
-                self.error("Se esperaba identificador")
+                self.error("Se esperaba Identif")
                 self.sincroniza(siguiente)
                 return
 
@@ -108,6 +108,7 @@ class Anasint:
                 return 
 
             self.analizaTipo()
+    
             
             if not self.comprueba("PtoComa"):
                 self.error("Se esperaba ;")
@@ -122,7 +123,7 @@ class Anasint:
         
         else:
 
-            self.error("Expresion inesperada " + str(self.componente) )
+            self.error("Se esperaba palabra reservada VAR o INICIO")
             self.sincroniza(siguiente)
     
 
@@ -156,7 +157,7 @@ class Anasint:
             self.analizaRestolistaid()
 
         else:
-            self.error("Se esperada Identificador")
+            self.error("Se esperada Identif")
             self.sincroniza(siguiente)
 
 
@@ -164,7 +165,7 @@ class Anasint:
 
         siguiente = ["PtoComa"]
 
-        if self.componente.cat == "PR" and self.componente.valor in ["ENTERO","REAL","BOOLEAN"]:
+        if self.componente.cat == "PR" and self.componente.valor in ["ENTERO","REAL","BOOLEANO"]:
             #<Tipo> -> <tipo_std>
             self.analizaTipostd()
         
@@ -195,7 +196,7 @@ class Anasint:
             self.analizaTipostd()
         
         else:
-            self.error("Elemento inesperado " + str(self.componente))
+            self.error("Se esperaba ENTERO, REAL, BOOLEANO o VECTOR")
             self.sincroniza(siguiente)
 
 
@@ -226,7 +227,7 @@ class Anasint:
             pass
 
         else:
-            self.error("Elemento inesperado " + str(self.componente))
+            self.error("se esperaba Identif o palabra reservada INICIO")
             self.sincroniza(siguiente)
 
 
@@ -244,7 +245,7 @@ class Anasint:
             pass
         
         else:
-            self.error("Elemento inesperado " + str(self.componente))
+            self.error("Se esperaba , o :")
             self.sincroniza(siguiente)
 
 
@@ -265,7 +266,7 @@ class Anasint:
             self.avanza()
 
         else:
-            self.error("Elemento inesperado " + str(self.componente))
+            self.error("Se esperaba tipo ENTERO, REAL o BOOLEANO")
             self.sincroniza(siguiente)
 
 
@@ -322,14 +323,14 @@ class Anasint:
             self.analizaExpresion()
 
             if not self.comprueba("ENTONCES"):
-                self.error("Se esperada palabra reservada ENTONCES")
+                self.error("Se esperaba palabra reservada ENTONCES")
                 self.sincroniza(siguiente)
                 return
 
             self.analizaInstruccion()
             
             if not self.comprueba("SINO"):
-                self.error("Se esperada palabra reservada SINO")
+                self.error("Se esperaba palabra reservada SINO")
                 self.sincroniza(siguiente)
                 return
 
@@ -341,7 +342,7 @@ class Anasint:
             self.analizaExpresion()
 
             if not self.comprueba("HACER"):
-                self.error("Se esperada palabra reservada HACER")
+                self.error("Se esperaba palabra reservada HACER")
                 self.sincroniza(siguiente)
                 return
 
@@ -380,7 +381,7 @@ class Anasint:
                 return
 
             if not self.comprueba("Identif"):
-                self.error("Elemento esperado Identificador")
+                self.error("Elemento esperado Identif")
                 self.sincroniza(siguiente)
                 return
 
@@ -406,7 +407,7 @@ class Anasint:
                 return
         
         else:
-            self.error("Elemento inesperado " + str(self.componente))
+            self.error("Se esperaba palabra reservada LEE o ESCRIBE " + str(self.componente))
             self.sincroniza(siguiente)
 
     
@@ -642,7 +643,7 @@ class Anasint:
             self.analizaExpresion()
             
             if not self.comprueba("ParentCi"):
-                self.error("Elemento inesperado " + str(self.componente))
+                self.error("Se esperaba )")
                 self.sincroniza(siguiente)
                 return
 

@@ -1,10 +1,21 @@
-PROGRAMA a1;
-V VAR i,x:INTERGER;
+PROGRAMA p1;
+VAR i,j,k: ENTERO;
+x:BOOLEANO;
+z: VECTOR [10] DE REAL;
 INICIO
-  i:=1JJHK;
-   MIENTRAS (i<>5) HACER
+  i:=0.0;
+   MIENTRAS NO(i<45) O CIERTO HACER
     INICIO 
-      x:=i*4;
-      ESCRIBE(x);
+      x:=23;
+      ESCRIBE (x);
+    FIN;
+  
+  SI NO (CIERTO) ENTONCES 
+    INICIO
+      id:=45;
+    FIN
+  SINO 
+    INICIO
+      LEE(x);
     FIN;
 FIN.
