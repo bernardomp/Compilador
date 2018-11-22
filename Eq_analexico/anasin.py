@@ -12,10 +12,13 @@ class Anasint:
         self.lexico= lexico
         self.avanza()
         self.analizaPrograma()
-        self.comprueba("EOF")
+        
+        if not self.comprueba("EOF"):
+            self.error("Se esperaba EOF")
+            self.sincroniza()
     
     def avanza(self):
-        self.componente= self.lexico.siguiente()
+        self.componente = self.lexico.siguiente()
 
     def comprueba(self, cat):
         
@@ -24,56 +27,93 @@ class Anasint:
 
             if self.componente.valor == cat:
                 self.avanza()
+                return True
             else:
-                self.error()
+                return False
         
         #No es una palabra reservada
         else:
 
             if self.componente.cat == cat:
                 self.avanza()
+                return True
             else:
-                self.error()
+                return False
     
-    def error(self,msg=None):
-
-        if msg == None:
-            print "Error:",self.componente
+    def error(self,msg=""):
         
-        else:
-
-            print msg
+        print "Error en linea " + str(self.lexico.nlinea) + ": " + msg
 
 
-    def sincroniza(self, sinc):
-        #sinc |= \{ "eof" \} 
-        sinc = None
-        while self.componente.cat not in sinc:
+    def sincroniza(self, sinc = []):
+
+        if "EOF" not in sinc:
+            sinc.append("EOF")
+
+        while True :
+            
+            if self.componente.cat == "PR" and self.componente.valor in sinc:
+                break
+            
+            if self.componente.cat in sinc:
+                break
+           
             self.avanza()
+
 
     def analizaPrograma(self):
 
+        siguiente = ["EOF"]
         if self.componente.cat == "PR" and self.componente.valor == "PROGRAMA":
             #<Programa> -> PROGRAMA id; <decl_var> <instrucciones>.
             self.avanza()
-            self.comprueba("Identif")
-            self.comprueba("PtoComa")
+
+            if not self.comprueba("Identif"):
+                self.error("Se esperaba identificador")
+                self.sincroniza(siguiente)
+                return
+
+
+            if not self.comprueba("PtoComa"):
+                self.error("Se esperaba ;")
+                self.sincroniza(siguiente)
+                return
+            
+
             self.analizaDeclVar()
             self.analizaInstrucciones()
-            self.comprueba("Punto")
+
+            if not self.comprueba("Punto"):
+                self.error("Se esperaba .")
+                self.sincroniza(siguiente)
+                return
         
         else:
-            self.error()
+            self.error("Se experaba la palabra reservada PROGRAMA")
+            self.sincroniza(siguiente)
     
+
     def analizaDeclVar(self):
         
+        siguiente = ["INICIO"]
+
         if self.componente.cat == "PR" and self.componente.valor == "VAR":
             #<decl_var> -> VAR <lista_id> : <tipo> ; <decl_v> 
             self.avanza()
             self.analizaListaid()
-            self.comprueba("DosPtos")
+
+            if not self.comprueba("DosPtos"):
+                self.error("Se esperaba :")
+                self.sincroniza(siguiente)
+                return 
+
             self.analizaTipo()
-            self.comprueba("PtoComa")
+            
+            if not self.comprueba("PtoComa"):
+                self.error("Se esperaba ;")
+                self.sincroniza(siguiente)
+                return
+
             self.analizaDeclV()
         
         elif self.componente == "PR" and self.componente.valor == "INICIO":
@@ -81,33 +121,48 @@ class Anasint:
             pass
         
         else:
-            self.error()
+
+            self.error("Expresion inesperada " + str(self.componente) )
+            self.sincroniza(siguiente)
     
 
     def analizaInstrucciones(self):
         
+        siguiente = ["Punto"]
+
         if self.componente.cat == "PR" and self.componente.valor == "INICIO":
             #<instrucciones> -> INICIO <lista_inst> FIN
             self.avanza()
             self.analizaListainst()
-            self.comprueba("FIN")
+
+            if not self.comprueba("FIN"):
+                self.error("Se esperaba palabra reservada FIN")
+                self.sincroniza(siguiente)
+                return
 
         else:
-            self.error()
+            self.error("Se esperaba palabra reservada INICIO")
+            self.sincroniza(siguiente)
+            return
 
 
     def analizaListaid(self):
         
+        siguiente = ["DosPtos"]
+
         if self.componente.cat == "Identif":
             #<lista_id> -> id <resto_listaid>
             self.avanza()
             self.analizaRestolistaid()
 
         else:
-            self.error()
+            self.error("Se esperada Identificador")
+            self.sincroniza(siguiente)
 
 
     def analizaTipo(self):
+
+        siguiente = ["PtoComa"]
 
         if self.componente.cat == "PR" and self.componente.valor in ["ENTERO","REAL","BOOLEAN"]:
             #<Tipo> -> <tipo_std>
@@ -116,24 +171,54 @@ class Anasint:
         elif self.componente.cat == "PR" and self.componente.valor == "VECTOR":
             #<Tipo> -> VECTOR [num] de <tipo_std>
             self.avanza()
-            self.comprueba("CorAp")
-            self.comprueba("Numero")
-            self.comprueba("CorCi")
-            self.comprueba("DE")
+
+            if not self.comprueba("CorAp"):
+                self.error("Se esperada [")
+                self.sincroniza(siguiente)
+                return
+
+            if not self.comprueba("Numero"):
+                self.error("Se esperada Numero")
+                self.sincroniza(siguiente)
+                return
+
+            if not self.comprueba("CorCi"):
+                self.error("Se esperada ]")
+                self.sincroniza(siguiente)
+                return
+
+            if not self.comprueba("DE"):
+                self.error("Se esperada palabra reservada DE")
+                self.sincroniza(siguiente)
+                return
+
             self.analizaTipostd()
         
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
 
 
     def analizaDeclV(self):
 
+        siguiente = ["INICIO"]
+
         if self.componente.cat == "Identif":
             #<decl_v> -> <lista_id> : <tipo> ; <decl_v>
             self.analizaListaid()
-            self.comprueba("DosPtos")
+            
+            if not self.comprueba("DosPtos"):
+                self.error("Se esperada :")
+                self.sincroniza(siguiente)
+                return 
+
             self.analizaTipo()
-            self.comprueba("PtoComa")
+
+            if not self.comprueba("PtoComa"):
+                self.error("Se esperada ;")
+                self.sincroniza(siguiente)
+                return
+
             self.analizaDeclV()
         
         elif self.componente.cat == "PR" and self.componente.valor == "INICIO":
@@ -141,11 +226,13 @@ class Anasint:
             pass
 
         else:
-            self.error()
-
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
 
 
     def analizaRestolistaid(self):
+
+        siguiente = ["DosPtos"]
 
         if self.componente.cat == "Coma":
             #<resto_listaid> -> ,<lista_id>
@@ -157,10 +244,13 @@ class Anasint:
             pass
         
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
 
 
     def analizaTipostd(self):
+
+        siguiente = ["PtoComa"]
 
         if self.componente.cat == "PR" and self.componente.valor == "ENTERO":
             #<tipo_std> -> ENTERO
@@ -175,15 +265,23 @@ class Anasint:
             self.avanza()
 
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
 
 
     def analizaListainst(self):
        
+        siguiente = ["FIN"]
+
         if (self.componente.cat == "PR" and self.componente.valor in ["INICIO", "LEE", "ESCRIBE", "SI", "MIENTRAS"]) or self.componente.cat == "Identif":
             #<lista_inst> -> <instruccion>;<lista_inst>
             self.analizaInstruccion()
-            self.comprueba("PtoComa")
+
+            if not self.comprueba("PtoComa"):
+                self.error("Se esperada ;")
+                self.sincroniza(siguiente)
+                return
+            
             self.analizaListainst()
         
         elif self.componente.cat == "PR" and self.componente.valor == "FIN":
@@ -191,16 +289,24 @@ class Anasint:
             pass
         
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
+
 
 
     def analizaInstruccion(self):
+
+        siguiente = ["PtoComa","SINO"]
 
         if self.componente.cat == "PR" and self.componente.valor == "INICIO":
             #<instruccion> -> INICIO <lista_inst> FIN 
             self.avanza()
             self.analizaListainst()
-            self.comprueba("FIN")
+
+            if not self.comprueba("FIN"):
+                self.error("Se esperada palabra reservada FIN")
+                self.sincroniza(siguiente)
+                return
         
         elif self.componente.cat == "Identif":
             #<instruccion> -> <inst_simple>
@@ -214,23 +320,41 @@ class Anasint:
             #<instruccion> -> SI <expresion> ENTONCES <instruccion> SINO <instruccion>
             self.avanza()
             self.analizaExpresion()
-            self.comprueba("ENTONCES")
+
+            if not self.comprueba("ENTONCES"):
+                self.error("Se esperada palabra reservada ENTONCES")
+                self.sincroniza(siguiente)
+                return
+
             self.analizaInstruccion()
-            self.comprueba("SINO")
+            
+            if not self.comprueba("SINO"):
+                self.error("Se esperada palabra reservada SINO")
+                self.sincroniza(siguiente)
+                return
+
             self.analizaInstruccion()
         
         elif self.componente.cat == "PR" and self.componente.valor == "MIENTRAS":
             #<instruccion> -> MIENTRAS <expresion> HACER <instruccion>
             self.avanza()
             self.analizaExpresion()
-            self.comprueba("HACER")
+
+            if not self.comprueba("HACER"):
+                self.error("Se esperada palabra reservada HACER")
+                self.sincroniza(siguiente)
+                return
+
             self.analizaInstruccion()
         
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
 
 
     def analizaInstruccionSimple(self):
+
+        siguiente = ["PtoComa","SINO"]
 
         if self.componente.cat =="Identif":
             #<inst_simple> -> id <resto_instsimple>
@@ -238,40 +362,71 @@ class Anasint:
             self.analizaRestoInstSimple()
         
         else:
-            self.error()
+            self.error("Elemento esperado Identif")
+            self.sincroniza(siguiente)
 
 
     def analizaInstruccionES(self):
 
+        siguiente = ["PtoComa","SINO"]
+
         if self.componente.cat == "PR" and self.componente.valor == "LEE":
             #<inst_e/s> -> LEE (id) 
             self.avanza()
-            self.comprueba("ParentAp")
-            self.comprueba("Identif")
-            self.comprueba("ParentCi")
+
+            if not self.comprueba("ParentAp"):
+                self.error("Elemento  esperado (")
+                self.sincroniza(siguiente)
+                return
+
+            if not self.comprueba("Identif"):
+                self.error("Elemento esperado Identificador")
+                self.sincroniza(siguiente)
+                return
+
+            if not self.comprueba("ParentCi"):
+                self.error("Elemento esperado )")
+                self.sincroniza(siguiente)
+                return
 
         elif self.componente.cat == "PR" and self.componente.valor == "ESCRIBE":
             #<inst_e/s> -> ESCRIBE (<expr_simple>)
             self.avanza()
-            self.comprueba("ParentAp")
+            
+            if not self.comprueba("ParentAp"):
+                self.error("Elemento  esperado (")
+                self.sincroniza(siguiente)
+                return
+
             self.analizaExpresionSimple()
-            self.comprueba("ParentCi")
+            
+            if not self.comprueba("ParentCi"):
+                self.error("Elemento esperado )")
+                self.sincroniza(siguiente)
+                return
         
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
+
     
 
     def analizaExpresion(self):
         
+        siguiente = ["ENTONCES","HACER","SINO" ,"PtoComa","ParentCi"]
+
         if (self.componente.cat == "PR" and self.componente.valor in ["FALSO", "CIERTO", "NO"]) or  self.componente.cat in ["OpAdd","Numero","ParentAp","Identif"]:
             #<expresion> -> <expr_simple> <expresion'>
             self.analizaExpresionSimple()
             self.analizaExpresionPrima()
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
     
 
     def analizaRestoInstSimple(self):
+
+        siguiente = ["PtoComa", "SINO"]
 
         if self.componente.cat == "OpAsigna":
             #<resto_instsimple> -> opasigna <expresion> 
@@ -282,8 +437,17 @@ class Anasint:
             #<resto_instsimple> -> [<expr_simple>] opasigna <expresion>
             self.avanza()
             self.analizaExpresionSimple()
-            self.comprueba("]")
-            self.comprueba("OpAsigna")
+
+            if not self.comprueba("]"):
+                self.error("Elemento esperado ]")
+                self.sincroniza(siguiente)
+                return
+
+            if not self.comprueba("OpAsigna"):
+                self.error("Elemento esperado :=")
+                self.sincroniza(siguiente)
+                return
+
             self.analizaExpresion()
         
         elif (self.componente.cat == "PR" and self.componente.valor == "SINO") or self.componente.cat == "PtoComa":
@@ -291,10 +455,13 @@ class Anasint:
             pass
 
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
 
 
     def analizaExpresionSimple(self):
+
+        siguiente = ["CorCi","ParentCi","ENTONCES","HACER","PtoComa","SINO","OpRel"]
 
         if self.componente.cat == "OpAdd":
             #<expr_simple> -> <signo> <termino> <resto_exsimple>
@@ -307,38 +474,54 @@ class Anasint:
             self.analizaTermino()
             self.analizaRestoExpSimple()    
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
     
 
     def analizaVariable(self):
         
+        siguiente = ["OpMult","Y","OpAdd","O","CorCi","ParentCi","ENTONCES","HACER","PtoComa","SINO","OpRel"]
+
         if self.componente.cat == "Identif":
             #<variable> -> id <resto_var>
             self.avanza()
             self.analizaRestoVar()
         
         else:
-            self.error()
+            self.error("Elemento esperado Identif")
+            self.sincroniza(siguiente)
+    
 
 
     def analizaRestoVar(self):
+
+        siguiente = ["OpMult","Y","OpAdd","O","CorCi","ParentCi","ENTONCES","HACER","PtoComa","SINO","OpRel"]
 
         if self.componente.cat == "CorAp":
             #<resto_var> -> [<expr_simple>]
             self.avanza()
             self.analizaExpresionSimple()
-            self.comprueba("CorCi")
+            
+            if not self.comprueba("CorCi"):
+                self.error("Elemento esperado )")
+                self.sincroniza(siguiente)
+                return
+    
         
         elif (self.componente.cat == "PR" and self.componente.valor in ["Y","O","ENTONCES","HACER","SINO"]) or self.componente.cat in ["OpMult","OpAdd","OpRel","CorCi","ParentCi", "PtoComa"]:
             #<resto_var> -> lambda
             pass
         
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
+
 
     
     def analizaExpresionPrima(self):
 
+        siguiente = ["ENTONCES","HACER","PtoComa","SINO","CorCi"]
+        
         if self.componente.cat == "OpRel":
             #<expresion'> -> oprel <expr_simple>
             self.avanza()
@@ -349,10 +532,13 @@ class Anasint:
             pass
 
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
 
 
     def analizaTermino(self):
+
+        siguiente = ["OpAdd","O","CorCi","ParentCi","ENTONCES","HACER","PtoComa","SINO","OpRel"]
 
         if (self.componente.cat == "PR" and self.componente.valor in ["FALSO", "CIERTO", "NO"]) or self.componente.cat in ["Numero","ParentAp","Identif"]:
             #<termino> -> <factor> <resto_term>
@@ -360,9 +546,13 @@ class Anasint:
             self.analizaRestoTerm()
         
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
+
 
     def analizaRestoExpSimple(self):
+
+        siguiente = ["CorCi","ParentCi","ENTONCES","HACER","PtoComa","SINO","OpRel"]
 
         if self.componente.cat == "OpAdd":
             #<resto_exsimple> -> opsuma <termino> <resto_exsimple>
@@ -381,10 +571,13 @@ class Anasint:
             pass
 
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
 
 
     def analizaSigno(self):
+
+        siguiente = ["Identif","Numero","ParentAp","NO","CIERTO","FALSO"]
 
         if self.componente.cat == "OpAdd":
             #<signo> -> + 
@@ -392,10 +585,13 @@ class Anasint:
             self.avanza()
         
         else:
-            self.error()
+            self.error("Elemento esperado + o -")
+            self.sincroniza(siguiente)
 
 
     def analizaRestoTerm(self):
+
+        siguiente = ["OpAdd","O","CorCi","ParentCi","ENTONCES","HACER","PtoComa","SINO","OpRel"]
 
         if self.componente.cat == "PR" and self.componente.valor == "Y":
             #<resto_term> -> Y <factor> <resto_term>
@@ -414,10 +610,13 @@ class Anasint:
             pass
 
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
 
     
     def analizaFactor(self):
+
+        siguiente = ["OpMult","Y","OpAdd","O","CorCi","ParentCi","ENTONCES","HACER","PtoComa","SINO","OpRel"]
 
         if self.componente.cat == "PR" and self.componente.valor == "FALSO":
             #<factor> -> FALSO
@@ -441,14 +640,19 @@ class Anasint:
             #<factor> -> (<expresion>)
             self.avanza()
             self.analizaExpresion()
-            self.comprueba("ParentCi")
+            
+            if not self.comprueba("ParentCi"):
+                self.error("Elemento inesperado " + str(self.componente))
+                self.sincroniza(siguiente)
+                return
 
         elif self.componente.cat == "Identif":
             #<factor> -> <variable>
             self.analizaVariable()
 
         else:
-            self.error()
+            self.error("Elemento inesperado " + str(self.componente))
+            self.sincroniza(siguiente)
 
 
 if __name__ == "__main__":

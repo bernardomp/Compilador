@@ -1,9 +1,10 @@
-PROGRAMA p1;
-VAR i,x:ENTERO;
+PROGRAMA a1;
+V VAR i,x:INTERGER;
 INICIO
-  i:=0.0;
+  i:=1JJHK;
    MIENTRAS (i<>5) HACER
     INICIO 
       x:=i*4;
       ESCRIBE(x);
     FIN;
+FIN.
