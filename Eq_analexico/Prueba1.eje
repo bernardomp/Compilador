@@ -9,7 +9,7 @@ INICIO
       x:=23;
       ESCRIBE (x);
     FIN;
-  
+  v:=8.89;
   SI NO (CIERTO) ENTONCES 
     INICIO
       id:=45;
