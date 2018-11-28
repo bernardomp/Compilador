@@ -1,5 +1,5 @@
 PROGRAMA p1;
-VAR i,j,k: ENTERO;
+VAR s,j,k: ENTERO;
 x:BOOLEANO;
 z: VECTOR [10] DE REAL;
 INICIO
@@ -16,6 +16,6 @@ INICIO
     FIN
   SINO 
     INICIO
-      LEE(x);
+      LEE(var);
     FIN;
 FIN.

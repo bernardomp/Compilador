@@ -10,6 +10,8 @@ class Anasint:
     def __init__(self, lexico):
 
         self.lexico= lexico
+        self.tabla = {}
+
         self.avanza()
         self.analizaPrograma()
         
@@ -68,11 +70,22 @@ class Anasint:
             #<Programa> -> PROGRAMA id; <decl_var> <instrucciones>.
             self.avanza()
 
+            identifPrograma = self.componente.valor
+
             if not self.comprueba("Identif"):
                 self.error("Se esperaba Identif")
                 self.sincroniza(siguiente)
                 return
 
+            #Comprobamos que no existe el identificador del programa
+            if (not self.tabla.has_key(identifPrograma)) and (identifPrograma not in Analex.PR):
+                self.tabla[identifPrograma] = True
+
+            elif identifPrograma in Analex.PR:
+                self.error("No se puede utilizar palabra reservada como indentificador")
+
+            else:
+                self.error("Variable definida")
 
             if not self.comprueba("PtoComa"):
                 self.error("Se esperaba ;")
@@ -153,6 +166,17 @@ class Anasint:
 
         if self.componente.cat == "Identif":
             #<lista_id> -> id <resto_listaid>
+
+             #Comprobamos que no existe el identificador del programa
+            if (not self.tabla.has_key(self.componente.valor)) and (self.componente.valor not in Analex.PR):
+                self.tabla[self.componente.valor] = True
+
+            elif self.componente.valor in Analex.PR:
+                self.error("No se puede utilizar palabra reservada como indentificador")
+
+            else:
+                self.error("Variable definida")
+            
             self.avanza()
             self.analizaRestolistaid()
 
@@ -358,6 +382,11 @@ class Anasint:
         siguiente = ["PtoComa","SINO"]
 
         if self.componente.cat =="Identif":
+
+            #Verificamos que la variable se haya definido
+            if not self.tabla.has_key(self.componente.valor):
+                self.error("Variable no definida")
+            
             #<inst_simple> -> id <resto_instsimple>
             self.avanza()
             self.analizaRestoInstSimple()
@@ -380,10 +409,16 @@ class Anasint:
                 self.sincroniza(siguiente)
                 return
 
+            nombrevar = self.componente.valor
+
             if not self.comprueba("Identif"):
                 self.error("Elemento esperado Identif")
                 self.sincroniza(siguiente)
                 return
+
+            #Verificamos que la variable se haya definido
+            if not self.tabla.has_key(nombrevar):
+                self.error("Variable no definida")
 
             if not self.comprueba("ParentCi"):
                 self.error("Elemento esperado )")
@@ -485,6 +520,12 @@ class Anasint:
 
         if self.componente.cat == "Identif":
             #<variable> -> id <resto_var>
+
+            #Verificamos que la variable se haya definido
+            if not self.tabla.has_key(self.componente.valor):
+                self.error("Variable no definida")
+
+
             self.avanza()
             self.analizaRestoVar()
         
