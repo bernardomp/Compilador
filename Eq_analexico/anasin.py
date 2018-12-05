@@ -5,6 +5,9 @@ import componentes
 from sys import argv
 from analex import Analex
 
+class Atributos:
+    pass
+
 class Anasint:
 
     def __init__(self, lexico):
@@ -14,6 +17,7 @@ class Anasint:
 
         self.avanza()
         self.analizaPrograma()
+        print self.tabla
         
         if not self.comprueba("EOF"):
             self.error("Se esperaba EOF")
@@ -79,7 +83,7 @@ class Anasint:
 
             #Comprobamos que no existe el identificador del programa
             if (not self.tabla.has_key(identifPrograma)) and (identifPrograma not in Analex.PR):
-                self.tabla[identifPrograma] = True
+                self.tabla[identifPrograma] = {}
 
             elif identifPrograma in Analex.PR:
                 self.error("No se puede utilizar palabra reservada como indentificador")
@@ -113,15 +117,18 @@ class Anasint:
         if self.componente.cat == "PR" and self.componente.valor == "VAR":
             #<decl_var> -> VAR <lista_id> : <tipo> ; <decl_v> 
             self.avanza()
-            self.analizaListaid()
+            
+            identificadores = self.analizaListaid()
 
             if not self.comprueba("DosPtos"):
                 self.error("Se esperaba :")
                 self.sincroniza(siguiente)
                 return 
 
-            self.analizaTipo()
+            tipo = self.analizaTipo()
     
+            for id in identificadores:
+                self.tabla[id]["tipo"] = tipo
             
             if not self.comprueba("PtoComa"):
                 self.error("Se esperaba ;")
@@ -164,12 +171,16 @@ class Anasint:
         
         siguiente = ["DosPtos"]
 
+        listaids = []
+
         if self.componente.cat == "Identif":
             #<lista_id> -> id <resto_listaid>
 
-             #Comprobamos que no existe el identificador del programa
+            listaids.append(self.componente.valor)
+
+            #Comprobamos que no existe el identificador del programa
             if (not self.tabla.has_key(self.componente.valor)) and (self.componente.valor not in Analex.PR):
-                self.tabla[self.componente.valor] = True
+                self.tabla[self.componente.valor] = {}
 
             elif self.componente.valor in Analex.PR:
                 self.error("No se puede utilizar palabra reservada como indentificador")
@@ -178,7 +189,11 @@ class Anasint:
                 self.error("Variable definida")
             
             self.avanza()
-            self.analizaRestolistaid()
+
+            restoid = self.analizaRestolistaid()
+            if restoid != None:
+                listaids.extend(restoid)
+            return listaids
 
         else:
             self.error("Se esperada Identif")
@@ -191,7 +206,7 @@ class Anasint:
 
         if self.componente.cat == "PR" and self.componente.valor in ["ENTERO","REAL","BOOLEANO"]:
             #<Tipo> -> <tipo_std>
-            self.analizaTipostd()
+            return self.analizaTipostd()
         
         elif self.componente.cat == "PR" and self.componente.valor == "VECTOR":
             #<Tipo> -> VECTOR [num] de <tipo_std>
@@ -217,7 +232,7 @@ class Anasint:
                 self.sincroniza(siguiente)
                 return
 
-            self.analizaTipostd()
+            return "VECTOR DE " + self.analizaTipostd()
         
         else:
             self.error("Se esperaba ENTERO, REAL, BOOLEANO o VECTOR")
@@ -230,14 +245,17 @@ class Anasint:
 
         if self.componente.cat == "Identif":
             #<decl_v> -> <lista_id> : <tipo> ; <decl_v>
-            self.analizaListaid()
+            listaid = self.analizaListaid()
             
             if not self.comprueba("DosPtos"):
                 self.error("Se esperada :")
                 self.sincroniza(siguiente)
                 return 
 
-            self.analizaTipo()
+            tipo = self.analizaTipo()
+
+            for id in listaid:
+                self.tabla[id]["tipo"] = tipo
 
             if not self.comprueba("PtoComa"):
                 self.error("Se esperada ;")
@@ -262,7 +280,8 @@ class Anasint:
         if self.componente.cat == "Coma":
             #<resto_listaid> -> ,<lista_id>
             self.avanza()
-            self.analizaListaid()
+
+            return  self.analizaListaid()
 
         elif self.componente.cat == "DosPtos":
             #<resto_listaid> -> lambda
@@ -276,22 +295,29 @@ class Anasint:
     def analizaTipostd(self):
 
         siguiente = ["PtoComa"]
+        tipo = None
 
         if self.componente.cat == "PR" and self.componente.valor == "ENTERO":
             #<tipo_std> -> ENTERO
+            tipo = self.componente.valor
             self.avanza()
 
         elif self.componente.cat == "PR" and self.componente.valor == "REAL":
             #<tipo_std> -> REAL
+            tipo = self.componente.valor
             self.avanza()
 
         elif self.componente.cat == "PR" and self.componente.valor == "BOOLEANO":
             #<tipo_std> -> BOOLEANO
+            tipo = self.componente.valor
             self.avanza()
 
         else:
             self.error("Se esperaba tipo ENTERO, REAL o BOOLEANO")
             self.sincroniza(siguiente)
+            return 
+        
+        return tipo
 
 
     def analizaListainst(self):
@@ -660,12 +686,17 @@ class Anasint:
 
         siguiente = ["OpMult","Y","OpAdd","O","CorCi","ParentCi","ENTONCES","HACER","PtoComa","SINO","OpRel"]
 
+        valor = None
+        tipo = None
+
         if self.componente.cat == "PR" and self.componente.valor == "FALSO":
             #<factor> -> FALSO
+            valor = 0
             self.avanza()
         
         elif self.componente.cat == "PR" and self.componente.valor == "CIERTO":
             #<factor> -> CIERTO
+            valor = 1
             self.avanza()
         
         elif self.componente.cat == "PR" and self.componente.valor == "NO":
@@ -675,6 +706,7 @@ class Anasint:
 
         elif self.componente.cat == "Numero":
             #<factor> -> num
+            valor = float(self.componente.valor)
             self.avanza()
             
 
