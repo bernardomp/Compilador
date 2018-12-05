@@ -23,6 +23,7 @@ class NodoAsignacion(AST):
         self.linea = linea
 
     def compsemanticas(self):
+        """
         self.izda.compsemanticas()
         self.exp.compsemanticas()
         if not tipos.igualOError(self.izda.tipo, self.exp.tipo):
@@ -32,6 +33,16 @@ class NodoAsignacion(AST):
             if not self.izda.tipo.elemental() or not self.exp.tipo.elemental():
                 errores.semantico(
                     "Solo puedo asignar objetos de tipos elementales.", self.linea)
+        """
+
+        self.izda.compsemanticas()
+        self.exp.compsemanticas()
+
+        if self.izda.tipo = "ENTERO" and self.exp.tipo == "REAL":
+            self.izda.tipo = "REAL"
+
+        elif self.izda.tipo = "REAL" and self.exp.tipo == "ENTERO":
+            self.izda.tipo = "REAL"
 
     def generaCodigo(self, c):
         c.append(R.Comentario("Asignacion en linea %d" % self.linea))
@@ -105,10 +116,15 @@ class NodoEscribe(AST):
 
     def compsemanticas(self):
         self.exp.compsemanticas()
+        """
         if self.exp.tipo != tipos.Error:
             if self.exp.tipo != tipos.Entero and self.exp.tipo != tipos.Cadena:
                 errores.semantico(
                     "Solo se escribir enteros y cadenas.", self.linea)
+        """
+        if self.exp.tipo not in ["ENTERO","REAL","BOOLEANO"]:
+            print("Solo se pueden escribir tipos ENTERO, REAL Y BOOLEANO",self.linea)
+
 
     def generaCodigo(self, c):
         c.append(R.Comentario("Escribe, linea %d" % self.linea))
@@ -399,4 +415,5 @@ class NodoVacio(AST):
         return '( "NodoVacio" "linea: %d" )' % self.linea
 
 
+    
 # Añadir nodo programa o lista de de arboles

@@ -437,6 +437,9 @@ class Anasint:
 
             nombrevar = self.componente.valor
 
+            if self.tabla[nombrevar]["tipo"] not in ["ENTERO","REAL"]:
+                self.error("Solo podemos leer variable de tipo ENTERO o REAL") 
+
             if not self.comprueba("Identif"):
                 self.error("Elemento esperado Identif")
                 self.sincroniza(siguiente)

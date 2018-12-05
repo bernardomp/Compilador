@@ -7,7 +7,7 @@ INICIO
    MIENTRAS NO(i<45) O CIERTO HACER
     INICIO 
       x:=23;
-      ESCRIBE (x);
+      ESCRIBE (1+1);
     FIN;
   v:=8.89;
   SI NO (CIERTO) ENTONCES 
@@ -16,6 +16,6 @@ INICIO
     FIN
   SINO 
     INICIO
-      LEE(var);
+      LEE(x);
     FIN;
 FIN.
