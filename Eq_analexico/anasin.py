@@ -19,7 +19,6 @@ class Anasint:
 
         self.avanza()
         self.analizaPrograma()
-        print self.tabla
         
         if not self.comprueba("EOF"):
             self.error("Se esperaba EOF")
@@ -72,6 +71,8 @@ class Anasint:
     def analizaPrograma(self):
 
         siguiente = ["EOF"]
+
+
         if self.componente.cat == "PR" and self.componente.valor == "PROGRAMA":
             #<Programa> -> PROGRAMA id; <decl_var> <instrucciones>.
             self.avanza()
@@ -83,6 +84,7 @@ class Anasint:
                 self.sincroniza(siguiente)
                 return
 
+            #Especificacion semantica 1
             #Comprobamos que no existe el identificador del programa
             if (not self.tabla.has_key(identifPrograma)) and (identifPrograma not in Analex.PR):
                 self.tabla[identifPrograma] = {}
@@ -129,8 +131,11 @@ class Anasint:
 
             tipo = self.analizaTipo()
     
-            for id in identificadores:
-                self.tabla[id]["tipo"] = tipo
+
+            if identificadores != None:
+
+                for id in identificadores:
+                    self.tabla[id]["tipo"] = tipo
 
             
             if not self.comprueba("PtoComa"):
@@ -181,6 +186,7 @@ class Anasint:
 
             listaids.append(self.componente.valor)
 
+            #Especificacion semantica 1
             #Comprobamos que no existe el identificador del programa
             if (not self.tabla.has_key(self.componente.valor)) and (self.componente.valor not in Analex.PR):
                 self.tabla[self.componente.valor] = {}
@@ -194,8 +200,10 @@ class Anasint:
             self.avanza()
 
             restoid = self.analizaRestolistaid()
+
             if restoid != None:
                 listaids.extend(restoid)
+
             return listaids
 
         else:
@@ -257,8 +265,9 @@ class Anasint:
 
             tipo = self.analizaTipo()
 
-            for id in listaid:
-                self.tabla[id]["tipo"] = tipo
+            if listaid != None:
+                for id in listaid:
+                    self.tabla[id]["tipo"] = tipo
 
             if not self.comprueba("PtoComa"):
                 self.error("Se esperada ;")
@@ -284,7 +293,7 @@ class Anasint:
             #<resto_listaid> -> ,<lista_id>
             self.avanza()
 
-            return  self.analizaListaid()
+            return self.analizaListaid()
 
         elif self.componente.cat == "DosPtos":
             #<resto_listaid> -> lambda
@@ -355,12 +364,15 @@ class Anasint:
         if self.componente.cat == "PR" and self.componente.valor == "INICIO":
             #<instruccion> -> INICIO <lista_inst> FIN 
             self.avanza()
-            self.analizaListainst()
+            
+            lista = self.analizaListainst()
 
             if not self.comprueba("FIN"):
                 self.error("Se esperada palabra reservada FIN")
                 self.sincroniza(siguiente)
                 return
+            
+            return NodoCompuesta(lista,self.lexico.linea)
         
         elif self.componente.cat == "Identif":
             #<instruccion> -> <inst_simple>
@@ -394,14 +406,16 @@ class Anasint:
         elif self.componente.cat == "PR" and self.componente.valor == "MIENTRAS":
             #<instruccion> -> MIENTRAS <expresion> HACER <instruccion>
             self.avanza()
-            self.analizaExpresion()
+            exp = self.analizaExpresion()
 
             if not self.comprueba("HACER"):
                 self.error("Se esperaba palabra reservada HACER")
                 self.sincroniza(siguiente)
                 return
 
-            self.analizaInstruccion()
+            cuerpo = self.analizaInstruccion()
+
+            return NodoMientras(exp,cuerpo,self.lexico.linea)
         
         else:
             self.error("Elemento inesperado " + str(self.componente))
@@ -413,15 +427,19 @@ class Anasint:
         siguiente = ["PtoComa","SINO"]
 
         if self.componente.cat =="Identif":
+            #<inst_simple> -> id <resto_instsimple>
 
             #Verificamos que la variable se haya definido
             if not self.tabla.has_key(self.componente.valor):
                 self.error("Variable no definida")
             
-            var = self.componente.valor
-            #<inst_simple> -> id <resto_instsimple>
+            ISimple = Atributos()
+            ISimple.v = self.componente.valor
+            ISimple.l = self.componente.linea
+            ISimple.t = self.tabla[self.componente.valor]["tipo"]
+            
             self.avanza()
-            self.analizaRestoInstSimple(var)
+            return self.analizaRestoInstSimple(ISimple)
         
         else:
             self.error("Elemento esperado Identif")
@@ -443,6 +461,7 @@ class Anasint:
 
             nombrevar = self.componente.valor
 
+            #Especificacion semantica 1
             #Verificamos que la variable se haya definido
             if not self.tabla.has_key(nombrevar):
                 self.error("Variable no definida")
@@ -461,8 +480,8 @@ class Anasint:
                 self.sincroniza(siguiente)
                 return
 
-            var = NodoAccesoVariable(nombrevar,self.lexico.nlinea)
-            return NodoLee(var,self.lexico.nlinea)
+            accesoVar = NodoAccesoVariable(nombrevar,self.lexico.nlinea,,self.tabla[nombrevar]["tipo"])
+            return NodoLee(accesoVar,self.lexico.nlinea)
                     
             
         elif self.componente.cat == "PR" and self.componente.valor == "ESCRIBE":
@@ -474,15 +493,14 @@ class Anasint:
                 self.sincroniza(siguiente)
                 return
 
-            exp = self.analizaExpresionSimple()
+            exp_simple = self.analizaExpresionSimple()
             
             if not self.comprueba("ParentCi"):
                 self.error("Elemento esperado )")
                 self.sincroniza(siguiente)
                 return
 
-            var = NodoAccesoVariable(exp,self.lexico.nlinea)
-            return NodoEscribe(var,self.lexico.nlinea)
+            return NodoEscribe(exp_simple,self.lexico.nlinea)
         
         else:
             self.error("Se esperaba palabra reservada LEE o ESCRIBE " + str(self.componente))
@@ -503,7 +521,7 @@ class Anasint:
             self.sincroniza(siguiente)
     
 
-    def analizaRestoInstSimple(self,E):
+    def analizaRestoInstSimple(self,ISimple):
 
         siguiente = ["PtoComa", "SINO"]
 
@@ -511,10 +529,11 @@ class Anasint:
             #<resto_instsimple> -> opasigna <expresion> 
             self.avanza()
 
-            exp = self.analizaExpresion()
-            var = NodoAccesoVariable(E,self.lexico.nlinea)
+            expr =  self.analizaExpresion()
 
-            return NodoAsignacion(var,exp,self.lexico.nlinea)
+            accesoVar = NodoAccesoVariable(ISimple.v,ISimple.l,ISimple.t)
+            return NodoAsignacion(accesoVar,expr,ISimple.l)
+
 
         elif self.componente.cat == "CorAp":
             #<resto_instsimple> -> [<expr_simple>] opasigna <expresion>
@@ -525,18 +544,19 @@ class Anasint:
             if not self.comprueba("CorCi"):
                 self.error("Elemento esperado ]")
                 self.sincroniza(siguiente)
+
                 return
 
             if not self.comprueba("OpAsigna"):
                 self.error("Elemento esperado :=")
                 self.sincroniza(siguiente)
+
                 return
 
-            var = NodoAccesoVariable(E,self.lexico.nlinea)
             exp = self.analizaExpresion()
-            vector = NodoAccesoVector(var,exp_simple,self.lexico.nlinea)
+            accesoV = NodoAccesoVector(ISimple.v,exp_simple,self.lexico.nlinea)
 
-            return NodoAsignacion(vector,exp,self.lexico.nlinea)
+            return NodoAsignacion(accesoV,exp,self.lexico.nlinea)
 
         elif (self.componente.cat == "PR" and self.componente.valor == "SINO") or self.componente.cat == "PtoComa":
             #<resto_exsimple> -> lambda
@@ -573,6 +593,7 @@ class Anasint:
         if self.componente.cat == "Identif":
             #<variable> -> id <resto_var>
 
+            #Especificacion semantica 1
             #Verificamos que la variable se haya definido
             if not self.tabla.has_key(self.componente.valor):
                 self.error("Variable no definida")
@@ -717,13 +738,15 @@ class Anasint:
 
         if self.componente.cat == "PR" and self.componente.valor == "FALSO":
             #<factor> -> FALSO
-            valor = 0
+            booleano =  NodoBooleano(self.componente.valor,self.componente.linea)
             self.avanza()
+            return booleano
         
         elif self.componente.cat == "PR" and self.componente.valor == "CIERTO":
             #<factor> -> CIERTO
-            valor = 1
+            booleano =  NodoBooleano(self.componente.valor,self.componente.linea)
             self.avanza()
+            return booleano
         
         elif self.componente.cat == "PR" and self.componente.valor == "NO":
             #<factor> -> NO <factor>
@@ -732,8 +755,16 @@ class Anasint:
 
         elif self.componente.cat == "Numero":
             #<factor> -> num
-            valor = float(self.componente.valor)
+            valor = self.componente.valor
+            tipo = self.componente.tipo
+
+            nodo = None
+            if tipo == "real":
+                nodo = NodoReal(self.componente.valor,self.componente.linea)
+            
             self.avanza()
+
+            return nodo
             
 
         elif self.componente.cat == "ParentAp":

@@ -29,16 +29,18 @@ class NodoAsignacion(AST):
         self.izda.compsemanticas()
         self.exp.compsemanticas()
 
-        print "sfdfd"
+        #Comprobacion semantica 3: Conversión implicita de enteros en reales
+        if self.izda.tipo == "ENTERO" and self.exp.tipo in ["REAL","ENTERO"]:
+            self.izda.tipo = self.exp.tipo
 
-        if self.izda.tipo == "ENTERO" and self.exp.tipo == "REAL":
+        elif self.izda.tipo == "REAL" and self.exp.tipo in ["REAL","ENTERO"]:
             self.izda.tipo = "REAL"
 
-        elif self.izda.tipo == "REAL" and self.exp.tipo == "ENTERO":
-            self.izda.tipo = "REAL"
+        elif self.izda.tipo == "BOOLEANO" and self.exp.tipo == "BOOLEANO":
+            self.izda.tipo = "BOOLEANO"
 
-        elif self.izda.tipo == "BOOLEANO" and self.exp.tipo != "BOOLEANO":
-            print("Se esperaba tipo booleano")
+        else:
+            print("Tipos incompatibles en asignacion (%s y %s)." % (self.izda.tipo, self.exp.tipo), self.linea)
 
     def arbol(self):
         return '( "Asignacion"\n  "linea: %d" \n%s\n%s\n)' % (self.linea, self.izda, self.exp)
@@ -65,6 +67,24 @@ class NodoSi(AST):
     def arbol(self):
         return '( "Si" "linea: %d" %s\n %s\n %s\n )' % (self.linea, self.cond, self.si, self.sino)
 
+class NodoMientras(AST):
+
+    def __init__(self, cond, cuerpo, linea):
+        self.cond = cond
+        self.cuerpo = cuerpo
+        self.linea = linea
+    
+    def compsemanticas(self):
+        self.cond.compsemanticas()
+        self.cuerpo.compsemanticas()
+    
+        if self.cond.tipo != "BOOLEANO":
+    
+            print("La condicion debe ser de tipo logico.", self.linea)
+
+
+    def arbol(self):
+        return '( "Mientras" "linea: %d" %s\n %s\n %s\n )' % (self.linea, self.cond, self.cuerpo)
 
 class NodoEscribe(AST):
     def __init__(self, exp, linea):
@@ -89,8 +109,8 @@ class NodoLee(AST):
     def compsemanticas(self):
         self.exp.compsemanticas()
        
-        if self.exp.tipo not in ["ENTERO","REAL","BOOLEANO"]:
-            print("Solo se pueden lee tipos ENTERO, REAL Y BOOLEANO",self.linea)
+        if self.exp.tipo not in ["ENTERO","REAL"]:
+            print("Solo se pueden lee tipos ENTERO y REAL",self.linea)
 
 
     def arbol(self):
@@ -119,17 +139,24 @@ class NodoComparacion(AST):
         self.izdo = izdo
         self.dcho = dcho
         self.linea = linea
+        self.tipo = None
 
     def compsemanticas(self):
         self.izdo.compsemanticas()
         self.dcho.compsemanticas()
-        if not tipos.igualOError(self.izdo.tipo, tipos.Entero) or \
-           not tipos.igualOError(self.dcho.tipo, tipos.Entero):
-            errores.semantico(
-                "Las operaciones de comparacion solo pueden operar con enteros.", self.linea)
-            self.tipo = tipos.Error
+
+        #Comprobacion semantica 3: Conversión implicita de enteros en reales
+        if self.izdo.tipo == "ENTERO" and self.dcho.tipo in ["REAL","ENTERO"]:
+            self.tipo = self.dcho.tipo
+
+        elif self.izdo.tipo == "REAL" and self.dcho.tipo in ["REAL","ENTERO"]:
+            self.tipo = "REAL"
+
+        elif self.izdo.tipo == "BOOLEANO" and self.dcho.tipo == "BOOLEANO":
+            self.tipo = "BOOLEANO"
+
         else:
-            self.tipo = tipos.Logico
+            print("Tipos incompatibles en asignacion (%s y %s)." % (self.izdo.tipo, self.dcho.tipo), self.linea)
 
     def arbol(self):
         return '( "Comparacion" "op: %s" "tipo: %s" "linea: %d" \n %s\n %s\n)' % \
@@ -142,18 +169,24 @@ class NodoAritmetica(AST):
         self.izdo = izdo
         self.dcho = dcho
         self.linea = linea
+        self.tipo = None
 
     def compsemanticas(self):
         self.izdo.compsemanticas()
         self.dcho.compsemanticas()
-        if not tipos.igualOError(self.izdo.tipo, tipos.Entero) or \
-           not tipos.igualOError(self.dcho.tipo, tipos.Entero):
-            errores.semantico(
-                "Las operaciones aritmeticas solo pueden operar con enteros.", self.linea)
-            self.tipo = tipos.Error
-        else:
-            self.tipo = tipos.Entero
+       
+       #Comprobacion semantica 3: Conversión implicita de enteros en reales
+        if self.izdo.tipo == "ENTERO" and self.dcho.tipo in ["REAL","ENTERO"]:
+            self.tipo = self.dcho.tipo
 
+        elif self.izdo.tipo == "REAL" and self.dcho.tipo in ["REAL","ENTERO"]:
+            self.tipo = "REAL"
+
+        elif self.izdo.tipo == "BOOLEANO" and self.dcho.tipo == "BOOLEANO":
+            self.tipo = "BOOLEANO"
+
+        else:
+            print("Tipos incompatibles en asignacion (%s y %s)." % (self.izdo.tipo, self.dcho.tipo), self.linea)
 
     def arbol(self):
         return '( "Aritmetica" "op: %s" "tipo: %s" "linea: %d" \n %s\n %s\n)' % \
@@ -166,7 +199,7 @@ class NodoEntero(AST):
         self.linea = linea
 
     def compsemanticas(self):
-        self.tipo = tipos.Entero
+        self.tipo = "ENTERO"
 
     def arbol(self):
         return '( "Entero" "valor: %d" "tipo: %s" "linea: %d" )' % (self.valor, self.tipo, self.linea)
@@ -195,12 +228,13 @@ class NodoBooleano(AST):
 
 
 class NodoAccesoVariable(AST):
-    def __init__(self, var, linea):
+    def __init__(self, var, linea,tipo):
         self.var = var
         self.linea = linea
+        self.tipo = tipo
 
     def compsemanticas(self):
-        self.tipo = self.var.tipo
+        pass
 
 
     def arbol(self):
@@ -217,22 +251,14 @@ class NodoAccesoVector(AST):
         self.izda.compsemanticas()
         self.exp.compsemanticas()
 
+        self.tipo = "VECTOR"
 
-        if self.izda.tipo != tipos.Error:
-            if self.izda.tipo.elemental():
-                errores.semantico("Estas accediendo a una expresion de tipo %s como si fuera un vector." %
-                                  self.izda.tipo, self.linea)
-                self.tipo = tipos.Error
-            elif self.izda.tipo == tipos.Funcion:
-                errores.semantico("Estas accediendo a la funcion %s como si fuera un vector." %
-                                  self.izda.var.id, self.linea)
-                self.tipo = tipos.Error
-            else:
-                self.tipo = self.izda.tipo.base
-        else:
-            self.tipo = tipos.Error
-        if not tipos.igualOError(self.exp.tipo, tipos.Entero):
-            errores.semantico("El tipo de la expresion de acceso al vector debe ser entero.",
+        if self.izda.tipo != "VECTOR":
+            print("Estas accediendo a una expresion de tipo %s como si fuera un vector." %
+            self.izda.tipo, self.linea)
+        
+        if self.exp.tipo != "ENTERO":
+            print("El tipo de la expresion de acceso al vector debe ser entero.",
                               self.linea)
 
 
@@ -255,12 +281,15 @@ class NodoVacio(AST):
 # Añadir nodo programa o lista de de arboles
 
 class NodoPrograma(AST):
-    def __init__(self, linea):
+    def __init__(self, id,decVar,inst,linea):
         self.linea = linea
+        self.id = id
+        self.decVar = decVar
+        self.inst = inst
 
     def compsemanticas(self):
-        self.tipo = "ERROR"
+        self.tipo = "PROGRAMA"
 
     def arbol(self):
-        return '( "NodoVacio" "linea: %d" )' % self.linea
+        return '( "PROGRAMA" "linea: %d " )' % (self.linea,sel)
 
