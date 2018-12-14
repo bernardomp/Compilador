@@ -23,6 +23,7 @@ class NodoAsignacion(AST):
         self.izda = izda
         self.exp = exp
         self.linea = linea
+        self.compsemanticas()
 
     def compsemanticas(self):
        
@@ -53,7 +54,7 @@ class NodoSi(AST):
         self.si = si
         self.sino = sino
         self.linea = linea
-
+        self.compsemanticas()
 
     def compsemanticas(self):
         self.cond.compsemanticas()
@@ -73,7 +74,7 @@ class NodoMientras(AST):
         self.cond = cond
         self.cuerpo = cuerpo
         self.linea = linea
-
+        self.compsemanticas()
     
     def compsemanticas(self):
         self.cond.compsemanticas()
@@ -91,6 +92,7 @@ class NodoEscribe(AST):
     def __init__(self, exp, linea):
         self.exp = exp
         self.linea = linea
+        self.compsemanticas()
 
     def compsemanticas(self):
         self.exp.compsemanticas()
@@ -106,13 +108,13 @@ class NodoLee(AST):
     def __init__(self, exp, linea):
         self.exp = exp
         self.linea = linea
-
+        self.compsemanticas()
 
     def compsemanticas(self):
         self.exp.compsemanticas()
        
         if self.exp.tipo not in ["ENTERO","REAL"]:
-            print("Solo se pueden lee tipos ENTERO y REAL",self.linea)
+            print("Solo se pueden leer tipos ENTERO y REAL.",self.linea)
 
 
     def arbol(self):
@@ -123,7 +125,7 @@ class NodoCompuesta(AST):
     def __init__(self, sentencias, linea):
         self.sentencias = sentencias
         self.linea = linea
-
+        self.compsemanticas()
 
     def compsemanticas(self):
         for sent in self.sentencias:
@@ -143,6 +145,7 @@ class NodoComparacion(AST):
         self.dcho = dcho
         self.linea = linea
         self.tipo = None
+        self.compsemanticas()
 
     def compsemanticas(self):
         self.izdo.compsemanticas()
@@ -264,7 +267,6 @@ class NodoAccesoVector(AST):
         self.izda = izda
         self.exp = exp
         self.linea = linea
-        self.compsemanticas()
 
     def compsemanticas(self):
         self.exp.compsemanticas()
@@ -294,7 +296,7 @@ class NodoVacio(AST):
         self.tipo = "ERROR"
 
     def arbol(self):
-        return '(NodoVacio linea: %d \n)' % self.linea
+        return '(NodoVacio linea: %d)' % self.linea
 
 
     

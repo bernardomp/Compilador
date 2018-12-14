@@ -81,7 +81,7 @@ class Anasint:
             if not self.comprueba("Identif"):
                 self.error("Se esperaba Identif")
                 self.sincroniza(siguiente)
-                return
+                return NodoVacio(self.lexico.nlinea)
 
             #Especificacion semantica 1
             #Comprobamos que no existe el identificador del programa
@@ -97,7 +97,7 @@ class Anasint:
             if not self.comprueba("PtoComa"):
                 self.error("Se esperaba ;")
                 self.sincroniza(siguiente)
-                return
+                return NodoVacio(self.lexico.nlinea)
             
 
             self.analizaDeclVar()
@@ -106,13 +106,14 @@ class Anasint:
             if not self.comprueba("Punto"):
                 self.error("Se esperaba .")
                 self.sincroniza(siguiente)
-                return
+                return NodoVacio(self.lexico.nlinea)
             
             return NodoPrograma(identifProg,instrucciones,self.lexico.nlinea)
         
         else:
             self.error("Se experaba la palabra reservada PROGRAMA")
             self.sincroniza(siguiente)
+            return NodoVacio(self.lexico.nlinea)
     
 
     def analizaDeclVar(self):
@@ -128,7 +129,7 @@ class Anasint:
             if not self.comprueba("DosPtos"):
                 self.error("Se esperaba :")
                 self.sincroniza(siguiente)
-                return 
+                return NodoVacio(self.lexico.nlinea)
 
             tipo = self.analizaTipo()
     
@@ -142,7 +143,7 @@ class Anasint:
             if not self.comprueba("PtoComa"):
                 self.error("Se esperaba ;")
                 self.sincroniza(siguiente)
-                return
+                return NodoVacio(self.lexico.nlinea)
 
             self.analizaDeclV()
         
@@ -154,6 +155,7 @@ class Anasint:
 
             self.error("Se esperaba palabra reservada VAR o INICIO")
             self.sincroniza(siguiente)
+            return NodoVacio(self.lexico.nlinea)
     
 
     def analizaInstrucciones(self):
@@ -347,24 +349,29 @@ class Anasint:
         if (self.componente.cat == "PR" and self.componente.valor in ["INICIO", "LEE", "ESCRIBE", "SI", "MIENTRAS"]) or self.componente.cat == "Identif":
             #<lista_inst> -> <instruccion>;<lista_inst>
             inst = self.analizaInstruccion()
-            conjuntoInst.append(inst)
 
             if not self.comprueba("PtoComa"):
                 self.error("Se esperada ;")
                 self.sincroniza(siguiente)
-                return
+                return [NodoVacio(self.lexico.nlinea)]
             
             listaInst = self.analizaListainst()
             
-            return conjuntoInst + listaInst
+            if inst !=None:
+                conjuntoInst.append(inst)
+            if listaInst != None:
+                conjuntoInst = conjuntoInst + listaInst
+
+            return conjuntoInst
         
         elif self.componente.cat == "PR" and self.componente.valor == "FIN":
             #<lista_inst> -> lambda
-            return []
+            return 
         
         else:
             self.error("Elemento inesperado " + str(self.componente))
             self.sincroniza(siguiente)
+            return 
 
 
 
@@ -382,7 +389,7 @@ class Anasint:
                 self.error("Se esperada palabra reservada FIN")
                 self.sincroniza(siguiente)
                 return
-            
+        
             return NodoCompuesta(lista,self.lexico.nlinea)
         
         elif self.componente.cat == "Identif":
@@ -416,6 +423,7 @@ class Anasint:
         
         elif self.componente.cat == "PR" and self.componente.valor == "MIENTRAS":
             #<instruccion> -> MIENTRAS <expresion> HACER <instruccion>
+            linea = self.componente.linea
             self.avanza()
             exp = self.analizaExpresion()
             print("1--->",exp)
@@ -427,11 +435,13 @@ class Anasint:
 
             cuerpo = self.analizaInstruccion()
 
-            return NodoMientras(exp,cuerpo,self.lexico.nlinea)
+            return NodoMientras(exp,cuerpo,linea)
         
         else:
             self.error("Elemento inesperado " + str(self.componente))
             self.sincroniza(siguiente)
+            print("!11111")
+            
 
 
     def analizaInstruccionSimple(self):
@@ -510,14 +520,16 @@ class Anasint:
             if not self.comprueba("ParentAp"):
                 self.error("Elemento  esperado (")
                 self.sincroniza(siguiente)
-                return
+
+                return NodoVacio(self.lexico.nlinea)
 
             exp_simple = self.analizaExpresionSimple()
-            
+        
             if not self.comprueba("ParentCi"):
                 self.error("Elemento esperado )")
                 self.sincroniza(siguiente)
-                return
+
+                return NodoVacio(self.lexico.nlinea)
 
             return NodoEscribe(exp_simple,self.lexico.nlinea)
         
@@ -787,7 +799,9 @@ class Anasint:
         elif self.componente.cat == "OpMult":
             #<resto_term> -> opmult <factor> <resto_term>
             op = self.componente.valor
+            
             self.avanza()
+            
             factor = self.analizaFactor()
             resto_term = self.analizaRestoTerm(factor)
 
@@ -810,12 +824,14 @@ class Anasint:
             #<factor> -> FALSO
             booleano =  NodoBooleano(self.componente.valor,self.componente.linea)
             self.avanza()
+
             return booleano
         
         elif self.componente.cat == "PR" and self.componente.valor == "CIERTO":
             #<factor> -> CIERTO
             booleano =  NodoBooleano(self.componente.valor,self.componente.linea)
             self.avanza()
+
             return booleano
         
         elif self.componente.cat == "PR" and self.componente.valor == "NO":
@@ -825,20 +841,21 @@ class Anasint:
             self.avanza()
             factor = self.analizaFactor()
 
-            return NodoComparacion(op,factor,None,self.lexico.nlinea)
+            return NodoComparacion(op,factor,NodoVacio(self.lexico.nlinea),self.lexico.nlinea)
 
         elif self.componente.cat == "Numero":
             #<factor> -> num
             
             valor = self.componente.valor
             tipo = self.componente.tipo
-
             nodo = None
+
             if tipo == "REAL":
                 nodo = NodoReal(self.componente.valor,self.componente.linea)
+
             elif tipo == "ENTERO":
-              
                 nodo = NodoEntero(self.componente.valor,self.componente.linea)
+
             self.avanza()
     
             return nodo
@@ -871,9 +888,15 @@ if __name__ == "__main__":
     script, filename = argv
     txt = open(filename)
     print "Este es tu fichero %r" % filename
+    print "###################\n"
+    print "Analisis lexico"
     fl = flujo.Flujo(txt)
     analex = Analex(fl)
   
+    print "\n###################"
+    print "Analisis sintactico"
     anasint = Anasint(analex)
 
+    print "\n###################"
+    print "Analisis semantico"
     print(anasint.NodoPrograma)

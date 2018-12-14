@@ -1,8 +1,9 @@
 PROGRAMA p1;
-VAR z: ENTERO;
+VAR z,k,v: ENTERO;
+n: ENTERO;
+l: VECTOR [10] DE ENTERO;
 INICIO
-   MIENTRAS NO(j<45) HACER
-    INICIO 
-      LEE(z);
-    FIN;
+    ESCRIBE (1=1);
+    LEE(x);
+    l[1]:=23;
 FIN.
