@@ -1,19 +1,8 @@
 PROGRAMA p1;
-VAR z,j,k,v: ENTERO;
-l:VECTOR [10] DE REAL;
+VAR z: ENTERO;
 INICIO
-   MIENTRAS NO(j<45) O CIERTO HACER
+   MIENTRAS NO(j<45) HACER
     INICIO 
-      z[0]:=1;
-      ESCRIBE (1<1);
-    FIN;
-  v:=8.89;
-  SI NO (CIERTO) ENTONCES 
-    INICIO
-      j:=45;
-    FIN
-  SINO 
-    INICIO
-      LEE(x);
+      LEE(z);
     FIN;
 FIN.

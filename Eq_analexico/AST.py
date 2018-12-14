@@ -43,7 +43,7 @@ class NodoAsignacion(AST):
             print("Tipos incompatibles en asignacion (%s y %s)." % (self.izda.tipo, self.exp.tipo), self.linea)
 
     def arbol(self):
-        return '( "Asignacion"\n  "linea: %d" \n%s\n%s\n)' % (self.linea, self.izda, self.exp)
+        return '(Asignacion\n  linea: %s \n%s\n%s\n)' % (self.linea, self.izda, self.exp)
 
 
 
@@ -54,6 +54,7 @@ class NodoSi(AST):
         self.sino = sino
         self.linea = linea
 
+
     def compsemanticas(self):
         self.cond.compsemanticas()
         self.si.compsemanticas()
@@ -63,9 +64,8 @@ class NodoSi(AST):
     
             print("La condicion del si debe ser de tipo logico.", self.linea)
 
-
     def arbol(self):
-        return '( "Si" "linea: %d" %s\n %s\n %s\n )' % (self.linea, self.cond, self.si, self.sino)
+        return '(Si linea: %s %s\n %s\n %s\n )' % (self.linea, self.cond, self.si, self.sino)
 
 class NodoMientras(AST):
 
@@ -73,6 +73,7 @@ class NodoMientras(AST):
         self.cond = cond
         self.cuerpo = cuerpo
         self.linea = linea
+
     
     def compsemanticas(self):
         self.cond.compsemanticas()
@@ -84,7 +85,7 @@ class NodoMientras(AST):
 
 
     def arbol(self):
-        return '( "Mientras" "linea: %d" %s\n %s\n %s\n )' % (self.linea, self.cond, self.cuerpo)
+        return '(Mientras linea: %d %s\n %s\n)' % (self.linea, self.cond, self.cuerpo)
 
 class NodoEscribe(AST):
     def __init__(self, exp, linea):
@@ -99,12 +100,13 @@ class NodoEscribe(AST):
 
 
     def arbol(self):
-        return '( "Escribe" "linea: %d" %s )' % (self.linea, self.exp)
+        return '(Escribe  linea: %d %s )' % (self.linea, self.exp)
 
 class NodoLee(AST):
     def __init__(self, exp, linea):
         self.exp = exp
         self.linea = linea
+
 
     def compsemanticas(self):
         self.exp.compsemanticas()
@@ -114,13 +116,14 @@ class NodoLee(AST):
 
 
     def arbol(self):
-        return '( "Escribe" "linea: %d" %s )' % (self.linea, self.exp)
+           return '(Lee linea: %d %s )' % (self.linea, self.exp)
 
 
 class NodoCompuesta(AST):
     def __init__(self, sentencias, linea):
         self.sentencias = sentencias
         self.linea = linea
+
 
     def compsemanticas(self):
         for sent in self.sentencias:
@@ -130,7 +133,7 @@ class NodoCompuesta(AST):
         r = ""
         for sent in self.sentencias:
             r += sent.arbol()+"\n"
-        return '( "Compuesta"\n %s)' % r
+        return '(Compuesta\n %s)' % r
 
 
 class NodoComparacion(AST):
@@ -143,24 +146,33 @@ class NodoComparacion(AST):
 
     def compsemanticas(self):
         self.izdo.compsemanticas()
-        self.dcho.compsemanticas()
-
+    
+        self.tipo = "BOOLEANO"
         #Comprobacion semantica 3: Conversión implicita de enteros en reales
-        if self.izdo.tipo == "ENTERO" and self.dcho.tipo in ["REAL","ENTERO"]:
-            self.tipo = self.dcho.tipo
+        
+        if self.dcho != None:
+            
+            self.dcho.compsemanticas()
+            """
+            if self.izdo.tipo == "ENTERO" and self.dcho.tipo in ["REAL","ENTERO"]:
+                self.tipo = self.dcho.tipo
 
-        elif self.izdo.tipo == "REAL" and self.dcho.tipo in ["REAL","ENTERO"]:
-            self.tipo = "REAL"
+            elif self.izdo.tipo == "REAL" and self.dcho.tipo in ["REAL","ENTERO"]:
+                self.tipo = "REAL"
 
-        elif self.izdo.tipo == "BOOLEANO" and self.dcho.tipo == "BOOLEANO":
-            self.tipo = "BOOLEANO"
+            elif self.izdo.tipo == "BOOLEANO" and self.dcho.tipo == "BOOLEANO":
+                self.tipo = "BOOLEANO"
 
-        else:
-            print("Tipos incompatibles en asignacion (%s y %s)." % (self.izdo.tipo, self.dcho.tipo), self.linea)
+            else:
+                print("Tipos incompatibles en comparacion (%s y %s)." % (self.izdo.tipo, self.dcho.tipo), self.linea)
+            """
+
+            if self.izdo.tipo != self.dcho.tipo:
+                print("Tipos incompatibles en comparacion (%s y %s)." % (self.izdo.tipo, self.dcho.tipo), self.linea)
 
     def arbol(self):
-        return '( "Comparacion" "op: %s" "tipo: %s" "linea: %d" \n %s\n %s\n)' % \
-               (self.op, self.tipo, self.linea, self.izdo, self.dcho)
+       return '(Comparacion op: %s tipo: %s linea: %d \n %s\n %s\n)' % \
+           (self.op, self.tipo, self.linea, self.izdo, self.dcho)
 
 
 class NodoAritmetica(AST):
@@ -170,6 +182,7 @@ class NodoAritmetica(AST):
         self.dcho = dcho
         self.linea = linea
         self.tipo = None
+        self.compsemanticas()
 
     def compsemanticas(self):
         self.izdo.compsemanticas()
@@ -188,43 +201,47 @@ class NodoAritmetica(AST):
         else:
             print("Tipos incompatibles en asignacion (%s y %s)." % (self.izdo.tipo, self.dcho.tipo), self.linea)
 
+
     def arbol(self):
-        return '( "Aritmetica" "op: %s" "tipo: %s" "linea: %d" \n %s\n %s\n)' % \
-               (self.op, self.tipo, self.linea, self.izdo, self.dcho)
+        return '(Aritmetica op: %s tipo: %s linea: %d \n %s\n %s\n)' % \
+           (self.op, self.tipo, self.linea, self.izdo, self.dcho)
 
 
 class NodoEntero(AST):
     def __init__(self, valor, linea):
         self.valor = valor
         self.linea = linea
+        self.compsemanticas()
 
     def compsemanticas(self):
         self.tipo = "ENTERO"
 
     def arbol(self):
-        return '( "Entero" "valor: %d" "tipo: %s" "linea: %d" )' % (self.valor, self.tipo, self.linea)
+        return '(ENTERO  valor: %s  tipo: %s  linea: %d)' % (str(self.valor), self.tipo, self.linea)
 
 class NodoReal(AST):
     def __init__(self, valor, linea):
         self.valor = valor
         self.linea = linea
+        self.compsemanticas()
 
     def compsemanticas(self):
         self.tipo = "REAL"
 
     def arbol(self):
-        return '( "Real" "valor: %d" "tipo: %s" "linea: %d" )' % (self.valor, self.tipo, self.linea)
+        return '(REAL  valor: %s  tipo: %s  linea: %d)' % (str(self.valor), self.tipo, self.linea)
 
 class NodoBooleano(AST):
     def __init__(self, valor, linea):
         self.valor = valor
         self.linea = linea
+        self.compsemanticas()
 
     def compsemanticas(self):
         self.tipo = "BOOLEANO"
 
     def arbol(self):
-        return '( "BOOLEANO" "valor: %d" "tipo: %s" "linea: %d" )' % (self.valor, self.tipo, self.linea)
+        return '(BOOLEANO valor: %s  tipo: %s linea: %d)' % (str(self.valor), self.tipo, self.linea)
 
 
 class NodoAccesoVariable(AST):
@@ -232,13 +249,14 @@ class NodoAccesoVariable(AST):
         self.var = var
         self.linea = linea
         self.tipo = tipo
+        self.compsemanticas()
 
     def compsemanticas(self):
         pass
 
 
     def arbol(self):
-        return '( "AccesoVariable" "v: %s" "linea: %d" )' % (self.var, self.linea)
+        return '(AccesoVariable  v: %s  linea: %d)' % (self.var, self.linea)
 
 
 class NodoAccesoVector(AST):
@@ -246,50 +264,59 @@ class NodoAccesoVector(AST):
         self.izda = izda
         self.exp = exp
         self.linea = linea
+        self.compsemanticas()
 
     def compsemanticas(self):
-        self.izda.compsemanticas()
         self.exp.compsemanticas()
 
         self.tipo = "VECTOR"
 
+        """
         if self.izda.tipo != "VECTOR":
             print("Estas accediendo a una expresion de tipo %s como si fuera un vector." %
             self.izda.tipo, self.linea)
+        """
         
         if self.exp.tipo != "ENTERO":
-            print("El tipo de la expresion de acceso al vector debe ser entero.",
-                              self.linea)
+            print("El tipo de la expresion de acceso al vector debe ser entero.",self.linea)
 
 
     def arbol(self):
-        return '( "AccesoVector" "tipo: %s" "linea: %d" %s\n %s\n)' % (self.tipo, self.linea, self.izda, self.exp)
+        return '(AccesoVector  tipo: %s  linea: %d  %s\n %s\n)' % (self.tipo, self.linea, self.izda, self.exp)
 
 
 class NodoVacio(AST):
     def __init__(self, linea):
         self.linea = linea
+        self.compsemanticas()
 
     def compsemanticas(self):
         self.tipo = "ERROR"
 
     def arbol(self):
-        return '( "NodoVacio" "linea: %d" )' % self.linea
+        return '(NodoVacio linea: %d \n)' % self.linea
 
 
     
 # Añadir nodo programa o lista de de arboles
 
 class NodoPrograma(AST):
-    def __init__(self, id,decVar,inst,linea):
+    def __init__(self, id,inst,linea):
         self.linea = linea
         self.id = id
-        self.decVar = decVar
         self.inst = inst
+        self.compsemanticas()
 
     def compsemanticas(self):
         self.tipo = "PROGRAMA"
 
+
     def arbol(self):
-        return '( "PROGRAMA" "linea: %d " )' % (self.linea,sel)
+        cad = ""
+        for instruccion in self.inst:
+            
+            cad = cad + instruccion.arbol()
+
+        return cad
+
 

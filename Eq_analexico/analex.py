@@ -168,7 +168,7 @@ class Analex:
             # Es un entero
             if ch != ".":
                 self.flujo.devuelve(ch)
-                return componentes.Numero(numero, self.nlinea, int)
+                return componentes.Numero(numero, self.nlinea, "ENTERO")
 
             # Puede ser un real
             else:
@@ -192,11 +192,11 @@ class Analex:
                 # No es un valor de tipo de real. Devolvemos el tipo entero
                 if digitosDecimales == 0:
                     self.flujo.devuelve(ch) #Devolvemos el caracter decimal al flujo de entrada
-                    return componentes.Numero(numero, self.nlinea, int)
+                    return componentes.Numero(numero, self.nlinea, "ENTERO")
 
                 # Es un valor real. Devolvemos el tipo real
                 else:
-                    return componentes.Numero(real, self.nlinea, float)
+                    return componentes.Numero(real, self.nlinea, "REAL")
 
         elif ch == "\n":
             # incrementa el numero de linea ya que acabamos de saltar a otra
