@@ -106,8 +106,7 @@ class Anasint:
             if not self.comprueba("Punto"):
                 self.error("Se esperaba .")
                 self.sincroniza(siguiente)
-                return NodoVacio(self.lexico.nlinea)
-            
+    
             return NodoPrograma(identifProg,instrucciones,self.lexico.nlinea)
         
         else:
@@ -120,6 +119,10 @@ class Anasint:
         
         siguiente = ["INICIO"]
 
+        tipo = None
+        tam = None
+        subtipo = None
+
         if self.componente.cat == "PR" and self.componente.valor == "VAR":
             #<decl_var> -> VAR <lista_id> : <tipo> ; <decl_v> 
             self.avanza()
@@ -131,13 +134,16 @@ class Anasint:
                 self.sincroniza(siguiente)
                 return NodoVacio(self.lexico.nlinea)
 
-            tipo = self.analizaTipo()
+            (tipo,tam,subtipo) = self.analizaTipo()
     
-
             if identificadores != None:
 
                 for id in identificadores:
                     self.tabla[id]["tipo"] = tipo
+
+                    if tipo == "VECTOR" and tam != None and subtipo != None:
+                        self.tabla[id]["tam"] = tam
+                        self.tabla[id]["subtipo"] = subtipo
 
             
             if not self.comprueba("PtoComa"):
@@ -162,18 +168,23 @@ class Anasint:
         
         siguiente = ["Punto"]
 
+        conjuntoInst = []
+
         if self.componente.cat == "PR" and self.componente.valor == "INICIO":
             #<instrucciones> -> INICIO <lista_inst> FIN
             self.avanza()
 
             listaInst = self.analizaListainst()
 
+            if(listaInst!=None):
+                conjuntoInst.extend(listaInst)
+
             if not self.comprueba("FIN"):
                 self.error("Se esperaba palabra reservada FIN")
                 self.sincroniza(siguiente)
-                return
-            
-            return listaInst
+                return conjuntoInst
+           
+            return conjuntoInst
 
         else:
             self.error("Se esperaba palabra reservada INICIO")
@@ -221,41 +232,52 @@ class Anasint:
 
         siguiente = ["PtoComa"]
 
+        tipo = None
+        tam = None
+        subtipo = None
+
         if self.componente.cat == "PR" and self.componente.valor in ["ENTERO","REAL","BOOLEANO"]:
             #<Tipo> -> <tipo_std>
-            return self.analizaTipostd()
+            tipo = self.analizaTipostd()
+            
+            return (tipo,tam,subtipo)
         
         elif self.componente.cat == "PR" and self.componente.valor == "VECTOR":
             #<Tipo> -> VECTOR [num] de <tipo_std>
             self.avanza()
+        
+            tipo = "VECTOR"
 
             if not self.comprueba("CorAp"):
                 self.error("Se esperaba [")
                 self.sincroniza(siguiente)
-                return
+                return (tipo,tam,subtipo)
+
+            tam = self.componente.valor
 
             if not self.comprueba("Numero"):
                 self.error("Se esperaba Numero")
                 self.sincroniza(siguiente)
-                return
+                return (tipo,tam,subtipo)
 
             if not self.comprueba("CorCi"):
                 self.error("Se esperaba ]")
                 self.sincroniza(siguiente)
-                return
+                return (tipo,tam,subtipo)
 
             if not self.comprueba("DE"):
                 self.error("Se esperada palabra reservada DE")
                 self.sincroniza(siguiente)
-                return
+                return (tipo,tam,subtipo)
             
-            self.analizaTipostd()
+            subtipo = self.analizaTipostd()
 
-            return "VECTOR"
+            return (tipo,tam,subtipo)
         
         else:
             self.error("Se esperaba ENTERO, REAL, BOOLEANO o VECTOR")
             self.sincroniza(siguiente)
+            return (tipo,tam,subtipo)
 
 
     def analizaDeclV(self):
@@ -271,11 +293,18 @@ class Anasint:
                 self.sincroniza(siguiente)
                 return 
 
-            tipo = self.analizaTipo()
+            (tipo,tam,subtipo) = self.analizaTipo()
 
             if listaid != None:
+
                 for id in listaid:
+
                     self.tabla[id]["tipo"] = tipo
+
+                    if tipo == "VECTOR" and tam != None and subtipo != None:
+                        self.tabla[id]["tam"] = tam
+                        self.tabla[id]["subtipo"] = subtipo
+
 
             if not self.comprueba("PtoComa"):
                 self.error("Se esperada ;")
@@ -350,15 +379,16 @@ class Anasint:
             #<lista_inst> -> <instruccion>;<lista_inst>
             inst = self.analizaInstruccion()
 
+            if inst !=None:
+                conjuntoInst.append(inst)
+
             if not self.comprueba("PtoComa"):
                 self.error("Se esperada ;")
                 self.sincroniza(siguiente)
-                return [NodoVacio(self.lexico.nlinea)]
+                return conjuntoInst
             
             listaInst = self.analizaListainst()
             
-            if inst !=None:
-                conjuntoInst.append(inst)
             if listaInst != None:
                 conjuntoInst = conjuntoInst + listaInst
 
@@ -388,7 +418,10 @@ class Anasint:
             if not self.comprueba("FIN"):
                 self.error("Se esperada palabra reservada FIN")
                 self.sincroniza(siguiente)
-                return
+                return 
+            
+            if lista == None:
+                lista = [NodoVacio(self.lexico.nlinea)]
         
             return NodoCompuesta(lista,self.lexico.nlinea)
         
@@ -403,7 +436,11 @@ class Anasint:
         elif self.componente.cat == "PR" and self.componente.valor == "SI":
             #<instruccion> -> SI <expresion> ENTONCES <instruccion> SINO <instruccion>
             self.avanza()
+
             cond = self.analizaExpresion()
+
+            if cond == None:
+                cond = NodoVacio(self.lexico.nlinea)
 
             if not self.comprueba("ENTONCES"):
                 self.error("Se esperaba palabra reservada ENTONCES")
@@ -411,13 +448,19 @@ class Anasint:
                 return
 
             si = self.analizaInstruccion()
+
+            if si == None:
+                si = NodoVacio(self.lexico.nlinea)
             
             if not self.comprueba("SINO"):
                 self.error("Se esperaba palabra reservada SINO")
                 self.sincroniza(siguiente)
-                return
+                return NodoVacio(self.lexico.nlinea)
 
             no = self.analizaInstruccion()
+
+            if no == None:
+                no = NodoVacio(self.lexico.nlinea)
 
             return NodoSi(cond,si,no,self.lexico.nlinea)
         
@@ -425,22 +468,27 @@ class Anasint:
             #<instruccion> -> MIENTRAS <expresion> HACER <instruccion>
             linea = self.componente.linea
             self.avanza()
+
             exp = self.analizaExpresion()
-            print("1--->",exp)
+            if exp == None:
+                exp = NodoVacio(linea)
 
             if not self.comprueba("HACER"):
                 self.error("Se esperaba palabra reservada HACER")
                 self.sincroniza(siguiente)
-                return
+                return NodoVacio(linea)
 
             cuerpo = self.analizaInstruccion()
+
+            if cuerpo == None:
+                cuerpo =  NodoVacio(linea)
 
             return NodoMientras(exp,cuerpo,linea)
         
         else:
             self.error("Elemento inesperado " + str(self.componente))
             self.sincroniza(siguiente)
-            print("!11111")
+            return 
             
 
 
@@ -464,6 +512,7 @@ class Anasint:
 
     
             self.avanza()
+          
             return self.analizaRestoInstSimple(ISimple)
         
         else:
@@ -546,13 +595,11 @@ class Anasint:
         if (self.componente.cat == "PR" and self.componente.valor in ["FALSO", "CIERTO", "NO"]) or  self.componente.cat in ["OpAdd","Numero","ParentAp","Identif"]:
             #<expresion> -> <expr_simple> <expresion'>
             exp1 = self.analizaExpresionSimple()
-            print("3-->")
             exp_prim = self.analizaExpresionPrima()
 
             if exp_prim != None:
                 op = exp_prim[0]
                 exp2 = exp_prim[1]
-                print("4-->",op,exp1.arbol(),exp2.arbol())
                 return NodoComparacion(op,exp1,exp2,self.lexico.nlinea)
             
             return exp1   
@@ -572,7 +619,11 @@ class Anasint:
 
             expr =  self.analizaExpresion()
 
+            if expr == None:
+                expr = NodoVacio(self.lexico.nlinea)
+
             accesoVar = NodoAccesoVariable(ISimple.v,ISimple.l,ISimple.t)
+
             return NodoAsignacion(accesoVar,expr,self.lexico.nlinea)
 
 
@@ -595,10 +646,14 @@ class Anasint:
                 return
 
             exp = self.analizaExpresion()
-       
-            accesoV = NodoAccesoVector(ISimple.v,exp_simple,self.lexico.nlinea)
 
-            return NodoAsignacion(accesoV,exp,self.lexico.nlinea)
+            if exp == None:
+                exp = NodoVacio(self.lexico.nlinea)
+       
+            accesoVar = NodoAccesoVariable(ISimple.v,self.lexico.nlinea,ISimple.t)
+            accesoVec = NodoAccesoVector(accesoVar,exp_simple,self.lexico.nlinea)
+           
+            return NodoAsignacion(accesoVec,exp,self.lexico.nlinea)
 
         elif (self.componente.cat == "PR" and self.componente.valor == "SINO") or self.componente.cat == "PtoComa":
             #<resto_exsimple> -> lambda
@@ -649,22 +704,23 @@ class Anasint:
             if not self.tabla.has_key(self.componente.valor):
                 self.error("Variable no definida")
                 nodo = NodoVacio(self.lexico.nlinea)
-                print("2-->")
+              
             else:
-                tipo = self.tabla[nombrevar]["tipo"]
+                tipo = self.tabla[identificador]["tipo"]
 
             self.avanza()
             resto_var = self.analizaRestoVar()
 
             if nodo != None:
-                print("2-->")
+               
                 return nodo
             
             elif resto_var == None:
                 return NodoAccesoVariable(identificador,self.lexico.nlinea,tipo)
             
             else:
-                return NodoAccesoVector(identificador,resto_var,self.lexico.nlinea)
+                acceso_var = NodoAccesoVariable(identificador,self.lexico.nlinea,tipo)
+                return NodoAccesoVector(acceso_var,resto_var,self.lexico.nlinea)
         
         else:
             self.error("Elemento esperado Identif")
@@ -728,6 +784,7 @@ class Anasint:
         if (self.componente.cat == "PR" and self.componente.valor in ["FALSO", "CIERTO", "NO"]) or self.componente.cat in ["Numero","ParentAp","Identif"]:
             #<termino> -> <factor> <resto_term>
             factor = self.analizaFactor()
+
             return self.analizaRestoTerm(factor)
         
         else:
@@ -790,10 +847,10 @@ class Anasint:
             #<resto_term> -> Y <factor> <resto_term>
             op = self.componente.valor
             self.avanza()
-
+          
             factor = self.analizaFactor()
             resto_term = self.analizaRestoTerm(factor)
-
+          
             return NodoComparacion(op,atributo,resto_term,self.lexico.nlinea)
 
         elif self.componente.cat == "OpMult":
@@ -805,7 +862,7 @@ class Anasint:
             factor = self.analizaFactor()
             resto_term = self.analizaRestoTerm(factor)
 
-            return NodoComparacion(op,atributo,resto_term,self.lexico.nlinea)
+            return NodoAritmetica(op,atributo,resto_term,self.lexico.nlinea)
 
         elif self.componente.cat in [ "OpAdd", "OpRel","CorCi","ParentCi","PtoComa"] or (self.componente.cat == "PR" and self.componente.valor in ["O", "ENTONCES","HACER","SINO"]):
             #<resto_term> -> lambda
@@ -822,14 +879,15 @@ class Anasint:
 
         if self.componente.cat == "PR" and self.componente.valor == "FALSO":
             #<factor> -> FALSO
-            booleano =  NodoBooleano(self.componente.valor,self.componente.linea)
+
+            booleano =  NodoBooleano(0,self.componente.linea)
             self.avanza()
 
             return booleano
         
         elif self.componente.cat == "PR" and self.componente.valor == "CIERTO":
             #<factor> -> CIERTO
-            booleano =  NodoBooleano(self.componente.valor,self.componente.linea)
+            booleano =  NodoBooleano(1,self.componente.linea)
             self.avanza()
 
             return booleano
@@ -841,7 +899,7 @@ class Anasint:
             self.avanza()
             factor = self.analizaFactor()
 
-            return NodoComparacion(op,factor,NodoVacio(self.lexico.nlinea),self.lexico.nlinea)
+            return NodoComparacion(op,factor,None,self.lexico.nlinea)
 
         elif self.componente.cat == "Numero":
             #<factor> -> num
@@ -894,9 +952,9 @@ if __name__ == "__main__":
     analex = Analex(fl)
   
     print "\n###################"
-    print "Analisis sintactico"
+    print "Analisis sintactico/semantico"
     anasint = Anasint(analex)
 
     print "\n###################"
-    print "Analisis semantico"
+    print "AST"
     print(anasint.NodoPrograma)

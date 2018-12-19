@@ -1,9 +1,5 @@
 PROGRAMA p1;
-VAR z,k,v: ENTERO;
-n: ENTERO;
-l: VECTOR [10] DE ENTERO;
+VAR i: REAL;
 INICIO
-    ESCRIBE (1=1);
-    LEE(x);
-    l[1]:=23;
+  MIENTRAS CIERTO HACER
 FIN.
