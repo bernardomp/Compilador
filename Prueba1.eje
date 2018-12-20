@@ -4,17 +4,17 @@ b:REAL;
 c:BOOLEANO;
 d: VECTOR [10] DE REAL;
 INICIO
-   MIENTRAS NO(d[0]<=-45) O CIERTO HACER
+   MIENTRAS NO(b<=-45) O CIERTO HACER
     INICIO 
-      b:=-23.12+9;
+      b:=-1*9;
       ESCRIBE (c);
     FIN;
   SI NO (FALSO) Y (b>1.0) ENTONCES 
     INICIO
-      d[0]:=12.1;
+      d[3]:=0.6;
     FIN
   SINO 
     INICIO
-      LEE(oh);
+      LEE(b);
     FIN;
 FIN.

@@ -52,7 +52,7 @@ class Anasint:
         print "Error en linea " + str(self.lexico.nlinea) + ": " + msg
 
 
-    #Permite obtener el punto de sincronización
+    #Permite obtener el punto de sincronización dado los siguientes de un no terminal
     def sincroniza(self, sinc = []):
 
         if "EOF" not in sinc:
@@ -72,7 +72,6 @@ class Anasint:
     def analizaPrograma(self):
 
         siguiente = ["EOF"]
-
 
         if self.componente.cat == "PR" and self.componente.valor == "PROGRAMA":
             #<Programa> -> PROGRAMA id; <decl_var> <instrucciones>.
@@ -443,7 +442,7 @@ class Anasint:
             if not self.comprueba("ENTONCES"):
                 self.error("Se esperaba palabra reservada ENTONCES")
                 self.sincroniza(siguiente)
-                return
+                return NodoVacio(self.lexico.nlinea)
 
             si = self.analizaInstruccion()
 
@@ -524,6 +523,7 @@ class Anasint:
     def analizaInstruccionES(self):
 
         siguiente = ["PtoComa","SINO"]
+        tipo = None
 
         if self.componente.cat == "PR" and self.componente.valor == "LEE":
             #<inst_e/s> -> LEE (id) 
@@ -842,6 +842,7 @@ class Anasint:
 
     def analizaRestoTerm(self,atributo):
 
+       
         siguiente = ["OpAdd","O","CorCi","ParentCi","ENTONCES","HACER","PtoComa","SINO","OpRel"]
 
         if self.componente.cat == "PR" and self.componente.valor == "Y":
@@ -859,14 +860,18 @@ class Anasint:
             op = self.componente.valor
             
             self.avanza()
-            
+        
             factor = self.analizaFactor()
+         
             resto_term = self.analizaRestoTerm(factor)
-
+            
+            if resto_term == None:
+                resto_term = NodoVacio(self.lexico.nlinea)
             return NodoAritmetica(op,atributo,resto_term,self.lexico.nlinea)
 
         elif self.componente.cat in [ "OpAdd", "OpRel","CorCi","ParentCi","PtoComa"] or (self.componente.cat == "PR" and self.componente.valor in ["O", "ENTONCES","HACER","SINO"]):
             #<resto_term> -> lambda
+           
             return atributo
 
         else:

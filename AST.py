@@ -168,13 +168,12 @@ class NodoComparacion(AST):
 
             self.dcho.compsemanticas()
 
-            
             # Comprobacion semantica 3: Conversión implicita de enteros en reales
             if self.izdo.tipo == "ENTERO" and self.dcho.tipo in ["REAL", "ENTERO"]:
-                self.tipo = self.dcho.tipo
+                self.tipo = "BOOLEANO"
 
             elif self.izdo.tipo == "REAL" and self.dcho.tipo in ["REAL", "ENTERO"]:
-                self.tipo = "REAL"
+                self.tipo = "BOOLEANO"
 
             elif self.izdo.tipo == "BOOLEANO" and self.dcho.tipo == "BOOLEANO":
                 self.tipo = "BOOLEANO"
@@ -285,8 +284,7 @@ class NodoAccesoVector(AST):
         self.tipo = "VECTOR"
 
         if self.izda.tipo != "VECTOR":
-            print("Estas accediendo a una expresion de tipo %s como si fuera un vector." %
-                  self.izda.tipo, self.linea)
+            print("Estas accediendo a una expresion de tipo %s como si fuera un vector." % self.izda.tipo, self.linea)
         else:
             self.subtipo = self.izda.subtipo
 
@@ -309,8 +307,7 @@ class NodoVacio(AST):
         return '(NodoVacio linea: %d)' % self.linea
 
 
-# Añadir nodo programa o lista de de arboles
-
+# Añadir nodo programa 
 class NodoPrograma(AST):
     def __init__(self, id, inst, linea):
         self.linea = linea
