@@ -1,5 +1,20 @@
 PROGRAMA p1;
-VAR i: REAL;
+VAR a: ENTERO;
+b:REAL;
+c:BOOLEANO;
+d: VECTOR [10] DE REAL;
 INICIO
-  MIENTRAS CIERTO HACER
+   MIENTRAS NO(d<=45) O CIERTO HACER
+    INICIO 
+      b:=23.12;
+      ESCRIBE (c);
+    FIN;
+  SI NO (FALSO) Y (b>1.0) ENTONCES 
+    INICIO
+      d[0]:=12.1;
+    FIN
+  SINO 
+    INICIO
+      LEE(b);
+    FIN;
 FIN.

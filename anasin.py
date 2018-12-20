@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import flujo
 import string
 import sys
@@ -51,6 +52,7 @@ class Anasint:
         print "Error en linea " + str(self.lexico.nlinea) + ": " + msg
 
 
+    #Permite obtener el punto de sincronización
     def sincroniza(self, sinc = []):
 
         if "EOF" not in sinc:
@@ -140,10 +142,8 @@ class Anasint:
 
                 for id in identificadores:
                     self.tabla[id]["tipo"] = tipo
-
-                    if tipo == "VECTOR" and tam != None and subtipo != None:
-                        self.tabla[id]["tam"] = tam
-                        self.tabla[id]["subtipo"] = subtipo
+                    self.tabla[id]["tam"] = tam
+                    self.tabla[id]["subtipo"] = subtipo
 
             
             if not self.comprueba("PtoComa"):
@@ -300,10 +300,8 @@ class Anasint:
                 for id in listaid:
 
                     self.tabla[id]["tipo"] = tipo
-
-                    if tipo == "VECTOR" and tam != None and subtipo != None:
-                        self.tabla[id]["tam"] = tam
-                        self.tabla[id]["subtipo"] = subtipo
+                    self.tabla[id]["tam"] = tam
+                    self.tabla[id]["subtipo"] = subtipo    
 
 
             if not self.comprueba("PtoComa"):
@@ -499,16 +497,19 @@ class Anasint:
         if self.componente.cat =="Identif":
             #<inst_simple> -> id <resto_instsimple>
 
+            #Atributo heredado con valor, linea, tipo y subtipo(solo para vectores)
             ISimple = Atributos()
             ISimple.v = self.componente.valor
             ISimple.l = self.componente.linea
             ISimple.t = None
+            ISimple.st = None
 
             #Verificamos que la variable se haya definido
             if not self.tabla.has_key(self.componente.valor):
                 self.error("Variable no definida")
             else:
                 ISimple.t = self.tabla[self.componente.valor]["tipo"]
+                ISimple.st = self.tabla[self.componente.valor]["subtipo"]
 
     
             self.avanza()
@@ -650,7 +651,7 @@ class Anasint:
             if exp == None:
                 exp = NodoVacio(self.lexico.nlinea)
        
-            accesoVar = NodoAccesoVariable(ISimple.v,self.lexico.nlinea,ISimple.t)
+            accesoVar = NodoAccesoVariable(ISimple.v,self.lexico.nlinea,ISimple.t,ISimple.st)
             accesoVec = NodoAccesoVector(accesoVar,exp_simple,self.lexico.nlinea)
            
             return NodoAsignacion(accesoVec,exp,self.lexico.nlinea)
@@ -707,6 +708,7 @@ class Anasint:
               
             else:
                 tipo = self.tabla[identificador]["tipo"]
+                subtipo = self.tabla[identificador]["subtipo"]
 
             self.avanza()
             resto_var = self.analizaRestoVar()
@@ -719,7 +721,7 @@ class Anasint:
                 return NodoAccesoVariable(identificador,self.lexico.nlinea,tipo)
             
             else:
-                acceso_var = NodoAccesoVariable(identificador,self.lexico.nlinea,tipo)
+                acceso_var = NodoAccesoVariable(identificador,self.lexico.nlinea,tipo,subtipo)
                 return NodoAccesoVector(acceso_var,resto_var,self.lexico.nlinea)
         
         else:

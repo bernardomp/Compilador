@@ -157,11 +157,9 @@ class Analex:
             # Leer todos los elementos que forman el numero
             numero = "" + ch
             puntoDetectado = 0
-
             ch = self.flujo.siguiente()
 
             while ch.isdigit():
-
                 numero = numero + ch
                 ch = self.flujo.siguiente()
 
@@ -172,7 +170,6 @@ class Analex:
 
             # Puede ser un real
             else:
-
                 real = numero + ch
                 ch = self.flujo.siguiente()
 
@@ -182,7 +179,6 @@ class Analex:
                 # Comprobamos que lo siguiente del punto sea un digito
                 while ch.isdigit():
                     digitosDecimales += 1
-
                     real = real + ch
                     ch = self.flujo.siguiente()
 
