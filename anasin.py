@@ -189,7 +189,7 @@ class Anasint:
         else:
             self.error("Se esperaba palabra reservada INICIO")
             self.sincroniza(siguiente)
-            return
+            return conjuntoInst
 
 
     def analizaListaid(self):
@@ -676,8 +676,8 @@ class Anasint:
 
             term = self.analizaTermino()
             resto_exp = self.analizaRestoExpSimple(term)
-
-            return NodoAritmetica(op,None,term,self.lexico.nlinea)
+           
+            return NodoAritmetica(op,term,None,self.lexico.nlinea)
 
         elif (self.componente.cat == "PR" and self.componente.valor in ["FALSO", "CIERTO", "NO"]) or self.componente.cat in ["Numero", "ParentAp", "Identif"]:
            #<expr_simple> -> <termino> <resto_exsimple> 
@@ -714,7 +714,6 @@ class Anasint:
             resto_var = self.analizaRestoVar()
 
             if nodo != None:
-               
                 return nodo
             
             elif resto_var == None:

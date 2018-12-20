@@ -197,21 +197,24 @@ class NodoAritmetica(AST):
 
     def compsemanticas(self):
         self.izdo.compsemanticas()
-        self.dcho.compsemanticas()
 
-        # Comprobacion semantica 3: Conversión implicita de enteros en reales
-        if self.izdo.tipo == "ENTERO" and self.dcho.tipo in ["REAL", "ENTERO"]:
-            self.tipo = self.dcho.tipo
+        self.tipo = self.izdo.tipo 
+        
+        if self.dcho !=None:
+            self.dcho.compsemanticas()
 
-        elif self.izdo.tipo == "REAL" and self.dcho.tipo in ["REAL", "ENTERO"]:
-            self.tipo = "REAL"
+            # Comprobacion semantica 3: Conversión implicita de enteros en reales
+            if self.izdo.tipo == "ENTERO" and self.dcho.tipo in ["REAL", "ENTERO"]:
+                self.tipo = self.dcho.tipo
 
-        elif self.izdo.tipo == "BOOLEANO" and self.dcho.tipo == "BOOLEANO":
-            self.tipo = "BOOLEANO"
+            elif self.izdo.tipo == "REAL" and self.dcho.tipo in ["REAL", "ENTERO"]:
+                self.tipo = "REAL"
 
-        else:
-            print("Tipos incompatibles en asignacion (%s y %s)." %
-                  (self.izdo.tipo, self.dcho.tipo), self.linea)
+            elif self.izdo.tipo == "BOOLEANO" and self.dcho.tipo == "BOOLEANO":
+                self.tipo = "BOOLEANO"
+
+            else:
+                print("Tipos incompatibles en asignacion (%s y %s)." % (self.izdo.tipo, self.dcho.tipo), self.linea)
 
     def arbol(self):
         return '(Aritmetica op: %s tipo: %s linea: %d \n %s\n %s\n)' % \
