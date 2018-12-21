@@ -532,7 +532,7 @@ class Anasint:
             if not self.comprueba("ParentAp"):
                 self.error("Elemento  esperado (")
                 self.sincroniza(siguiente)
-                return 
+                return NodoVacio(self.lexico.nlinea) 
 
             nombrevar = self.componente.valor
 
@@ -557,7 +557,7 @@ class Anasint:
             if not self.comprueba("ParentCi"):
                 self.error("Elemento esperado )")
                 self.sincroniza(siguiente)
-                return
+                return NodoVacio(self.lexico.nlinea)
 
             accesoVar = NodoAccesoVariable(nombrevar,self.lexico.nlinea,tipo)
             return NodoLee(accesoVar,self.lexico.nlinea)
@@ -637,14 +637,12 @@ class Anasint:
             if not self.comprueba("CorCi"):
                 self.error("Elemento esperado ]")
                 self.sincroniza(siguiente)
-
-                return
+                return NodoVacio(self.lexico.nlinea)
 
             if not self.comprueba("OpAsigna"):
                 self.error("Elemento esperado :=")
                 self.sincroniza(siguiente)
-
-                return
+                return NodoVacio(self.lexico.nlinea)
 
             exp = self.analizaExpresion()
 
@@ -739,9 +737,9 @@ class Anasint:
             exp = self.analizaExpresionSimple()
             
             if not self.comprueba("CorCi"):
-                self.error("Elemento esperado )")
+                self.error("Elemento esperado ]")
                 self.sincroniza(siguiente)
-                return
+                return NodoVacio(self.lexico.nlinea)
     
         
         elif (self.componente.cat == "PR" and self.componente.valor in ["Y","O","ENTONCES","HACER","SINO"]) or self.componente.cat in ["OpMult","OpAdd","OpRel","CorCi","ParentCi", "PtoComa"]:

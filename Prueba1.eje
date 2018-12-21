@@ -15,6 +15,6 @@ INICIO
     FIN
   SINO 
     INICIO
-      LEE(b);
+      LEE (b);
     FIN;
 FIN.
